@@ -71,10 +71,10 @@ void Stage3::start(uint32_t timestamp)
   attachInterrupt(1, updateEncoder, CHANGE);
 
   /* Initial state of the LEDs is blinking white */
-  digitalWrite(RED_LED_PIN,    LOW);
-  digitalWrite(GREEN_LED_PIN,  LOW);
-  digitalWrite(BLUE_LED_PIN,   LOW);
-  digitalWrite(ENABLE_LED_PIN, HIGH);
+  digitalWrite(RED_LED_PIN,    HIGH);
+  digitalWrite(GREEN_LED_PIN,  HIGH);
+  digitalWrite(BLUE_LED_PIN,   HIGH);
+  digitalWrite(ENABLE_LED_PIN, LOW);
 }
 
 
