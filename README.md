@@ -8,17 +8,15 @@ IEEE Southeastcon 2017 (The Engineering Force Awakens) competition files.
 
 # References
 
-* [Contest Rules](http://sites.ieee.org/southeastcon2017/files/2016/10/MMXVII-October-9-release.pdf)
-
 * [Schematics and PCB files](https://github.com/petesoper/arena-pcbs)
 
-A big thank you and appreciation for the work of Pete Soper for the five arena schematic and PCB boards.
+   A big thank you and appreciation for the work of Pete Soper for the five arena schematic and PCB boards.
 
-   * Stage 1 Probe Pads - Kicad
-   * Stage 1 I2C Board - Eagle
-   * Stage 2 Arduino Shield - Eagle
-   * Stage 3 Quadrature Encoder - Eagle
-   * Controller/Display - Eagle
+   * Stage 1 Probe Pads - the 6x pad board behind stage 1
+   * Stage 1 I2C Board - I2C board that controls the relay tree to select components
+   * Stage 2 Arduino Shield - the Arduino shield with connections to each of the other boards
+   * Stage 3 Quadrature Encoder - stage 3 quadrature control board
+   * Controller/Display - LCD display and contest start/stop buttons
    
 * Arduino connection map:
 
