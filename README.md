@@ -10,7 +10,8 @@ IEEE Southeastcon 2017 (The Engineering Force Awakens) competition files.
 
 * [Contest Rules](http://sites.ieee.org/southeastcon2017/files/2016/10/MMXVII-October-9-release.pdf)
 
-* [Schematics and PCB files](http://sites.ieee.org/southeastcon2017/files/2016/10/MMXVII-October-9-release.pdf)
+* [Schematics and PCB files](https://github.com/petesoper/arena-pcbs)
+
 A big thank you and appreciation for the work of Pete Soper for the five arena schematic and PCB boards.
 
    * Stage 1 Probe Pads - Kicad
@@ -38,5 +39,6 @@ A big thank you and appreciation for the work of Pete Soper for the five arena s
    *   GND: neopixel, vibration, quadrature common
    *   5v:  neopixel, LED common (anode)
 
-* [Official IEEE SoutheastCon 2017 site](http://sites.ieee.org/southeastcon2017)
+* [Contest Rules](http://sites.ieee.org/southeastcon2017/files/2016/10/MMXVII-October-9-release.pdf)
 
+* [Official IEEE SoutheastCon 2017 site](http://sites.ieee.org/southeastcon2017)
