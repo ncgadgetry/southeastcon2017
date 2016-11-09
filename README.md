@@ -1,6 +1,6 @@
 # Southeastcon 2017 
 
-IEEE Southeastcon 2017 (The Engineering Force Awakens) competition files.
+This github contains the arena control software for the IEEE Southeastcon 2017 hardware competition to be held in Charlotte, NC on April 1, 2017.
 
 # Contents:
 
@@ -10,7 +10,7 @@ IEEE Southeastcon 2017 (The Engineering Force Awakens) competition files.
 
 * [Schematics and PCB files](https://github.com/petesoper/arena-pcbs)
 
-   A big thank you and appreciation for the work of Pete Soper for the five arena schematic and PCB boards.
+   A big thank you and appreciation to Pete Soper for his work on the five arena schematic and PCB boards:
 
    * Stage 1 Probe Pads - the 6x pad board behind stage 1
    * Stage 1 I2C Board - I2C board that controls the relay tree to select components
@@ -18,6 +18,10 @@ IEEE Southeastcon 2017 (The Engineering Force Awakens) competition files.
    * Stage 3 Quadrature Encoder - stage 3 quadrature control board
    * Controller/Display - LCD display and contest start/stop buttons
    
+* [Contest Rules](http://sites.ieee.org/southeastcon2017/files/2016/10/MMXVII-October-9-release.pdf)
+
+* [Official IEEE SoutheastCon 2017 site](http://sites.ieee.org/southeastcon2017)
+
 * Arduino connection map:
 
    *   D0:  (O) Rx
@@ -37,6 +41,3 @@ IEEE Southeastcon 2017 (The Engineering Force Awakens) competition files.
    *   GND: neopixel, vibration, quadrature common
    *   5v:  neopixel, LED common (anode)
 
-* [Contest Rules](http://sites.ieee.org/southeastcon2017/files/2016/10/MMXVII-October-9-release.pdf)
-
-* [Official IEEE SoutheastCon 2017 site](http://sites.ieee.org/southeastcon2017)
