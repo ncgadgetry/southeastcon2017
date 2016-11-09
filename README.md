@@ -6,11 +6,17 @@ This github contains the arena control software for the IEEE Southeastcon 2017 h
 
 * ArenaControl - the Arduino source code for the control electronics
 
-   The arena source code is still a work in progress and is not yet complete. Once complete, I will announce an offer for
-   free cash and fame to anyone who can find any remaining bugs in the code. That offer is NOT available at this time, but you are
-   encouraged to read and understand the code. If you do find an issue now and want to pass it on to me, I will still add 
-   add your name to the list of contributors, but no cash prize. Or you can wait and hope the issue has not been fixed or
-   reported by someone else. 
+   The arena source code is still a work in progress and is not yet complete.
+   Please read the comments in the main ArenaControl.ino file for an offer
+   of fame (and 'fortune') for helping locate and resolve issues in the code.
+
+* 3D Files
+
+   The OpenSCAD 3D files for the arena and stage components
+
+* Rules
+
+   Latest copy of the rules, and historical copies of earlier versions.
 
 # References
 
