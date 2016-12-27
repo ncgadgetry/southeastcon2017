@@ -137,7 +137,7 @@ void Stage3::report(void)
  
    if (controller.attached()) {
       controller.lcdp()->setCursor(0,3);
-      controller.lcdp()->print("2: ");
+      controller.lcdp()->print("3: ");
       controller.lcdp()->print(String(score()));
       controller.lcdp()->print(" ");
       controller.lcdp()->print(String("32154"));
