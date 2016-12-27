@@ -18,19 +18,25 @@
  *
  ********************************************************************/
 
+#include <Wire.h>
+
 #include "Arduino.h"
 #include "Stage1.h"
 #include "relayTable.h"
-#include <Wire.h>
+
+#include "Controller.h"
+extern Controller controller;
 
 #define I2C_ADDR_RELAY   0x20
 uint16_t relayIndex = 0;
 uint16_t relayPattern = 0;
 void setRelays(uint16_t relayPattern);
 
+
 Stage1::Stage1() 
 {
 }
+
 
 void Stage1::start(uint32_t timestamp) 
 {
@@ -67,7 +73,6 @@ void Stage1::step(uint32_t timestamp)
 /* End of run report on points, and stage 1 specifics (relay pattern 
  *    chosen to select the component ordering)
  */
-
 void Stage1::report(void) 
 {
    Serial.print("------ Stage 1 report ------\n");
@@ -77,6 +82,14 @@ void Stage1::report(void)
    Serial.print(String(relayPattern, 16));
    Serial.print("\nSTAGE SCORE: N/A");
    Serial.print("\n\n"); 
+   
+   if (controller.attached()) {
+      controller.lcdp()->setCursor(0,1);
+      controller.lcdp()->print("1: N/A #");
+      controller.lcdp()->print(relayIndex);
+      controller.lcdp()->print(" ");
+      controller.lcdp()->print(String(relayPattern, 16));
+   }
 }
 
 

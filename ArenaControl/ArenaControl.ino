@@ -1,58 +1,68 @@
 /**
  *
- * Arduino connection map:
- *   D0:  (O) Rx (currently unused)
- *   D1:  (I) Tx (currently unused)
- *   D2:  (I) vibration sensor (IRQ)
- *   D3:  (I) quadrature channel B (IRQ)                                                                                                                                                                    
- *   D4:  (I) quadrature channel A
- *   D5:  (I) quadrature pushbutton (currently unused)
- *   D6:  (O) neopixel stick data
- *   D7:  (O) LED enable (active low)
- *   D8:  (O) LED red (cathode)
- *   D9:  (O) LED green (cathode)
- *   D10: (O) LED blue (cathode)
- *   D11: unused (routed to external I/O header)
- *   D12: unused (routed to external I/O header)
- *   D13: (O) magnetic coil (and UNO on-board LED)
- *   GND: neopixel, vibration, quadrature common
- *   5v:  neopixel, LED common (anode)
+ * SoutheastCon 2017 Arena control - ArenaControl.cpp
  *
- * KNOWN ISSUES:
- *   + stage 3 software not yet completed
- *   + reset stage 2 start period to 5 seconds (now 1 second)
- *   + reset match end time to 5 minutes (now 1 minute)
+ * This is the code file for the main init/control program. 
  *
- * I encourage everone to read through the code and help me identify any
- *    issues. This will make the arena electronics better for both me,
- *    your team, and all the other teams.
- * Anyone who identifies any issues now (before it is complete) will have 
- *    their name listed in the collaboration section below. Once the code
- *    is listed as officially complete (expected date is January 1), will
- *    have their name listed and will received $5 gift (handed out in 
- *    Charlotte at Southeastcon - you must be present). 
- * So you can help me find the issues now and get your name listed, or 
- *    wait and hope to get your name and cash.
- * Note that only the first person to find each issue is listed (and
- *    optionally gets the cash).
- * Any bug already listed in the above known issues list are not eligible.
+ * Each stage is confined within it's own class, with a start,
+ *    step, and stop method. Each of the stages is declared 
+ *    withi this file. In the Arduino setup() phase, the match
+ *    start and end time is calculated, and the start() method
+ *    for each stage class is invoked. Each stage is responsible
+ *    for initializing the I/O pins, interrupts, initial state,
+ *    etc needed for that stage.
+ * In the Arduino loop() phase, the step() method for each
+ *    stage is invoked. In this method, each stage checks the
+ *    state of any I/O, timers, interrupts, or internal state
+ *    to determine what action should be taken at that time. 
+ *    Most of the stages use a finite state machine (FSM) to
+ *    control the sequence of events within the stage.
+ * Once the competition match time has expired, the stop()
+ *    method for each stage is invoked, ending the competition
+ *    and updating the score for that stage.
  *
- * COLLABORATORS / HONORS (for helping identify new issues in the software):
- *    YOUR NAME COULD BE HERE FOR EVERYONE TO SE!!
+ * The score and state of the competition is shown in two
+ *    different ways - via the Arduino serial port (which can
+ *    be monitored via the serial monitor in the Arduino IDE),
+ *    and via a 4x20 LCD display. The use of the LCD display is
+ *    to make the job of starting, stopping, and scoring of the
+ *    competition easier by the judges. It is an optional item
+ *    that is not needed for the student practice arenas, and
+ *    the rest of the code will function fine without it.
+ *
+ * In the advent of no serial LCD, the competition countdown
+ *    will start as soon as the Arduino is powered on (or reset)
+ *    and will stop when the match timer expires. However, if an
+ *    LCD (and associated control buttons) is available, the 
+ *    Arduino will poll A0 to look for a start button, and will
+ *    stop whenever the match timer expires or the A3 stop button
+ *    is pressed. The arena can be reset and ready for the next
+ *    match by either pressing reset, or pressing and holding
+ *    both start and stop at the same time, then releasing for
+ *    at least one second prior to pressing start for the next
+ *    match.
+ *    
+ * Pin assignments, as well as a challenge to the code reviwers
+ *    to find bugs, and the list of those who helped, are listed
+ *    in the ArenaControl.h file
  */
  
 #include <Adafruit_NeoPixel.h>
+#include <LiquidCrystal_I2C.h>
+#include <MsTimer2.h>
+#include <Wire.h>
 
 #include "Arduino.h"
+#include "ArenaControl.h"
 #include "Stage1.h"
 #include "Stage2.h"
 #include "Stage3.h"
-#include <Wire.h>
-#include <MsTimer2.h>
+#include "Controller.h"
 
 Stage1 stage1;
 Stage2 stage2;
 Stage3 stage3;
+Controller controller;
 
 /* Length of match runtime - should be 4 minutes, but using 1 minute for debugging */
 #define MATCH_RUNTIME    (1L*60L*1000L)
@@ -66,16 +76,21 @@ void setup()
    Serial.begin(9600);
    Wire.begin();
 
-   // Choose a random index into the relay table. The reference to 
-   //    analog channel 0 is a hack to attempt to randomize the random
-   //    number generator by using an floating analog input as the
-   //    randomizer
-   randomSeedValue = analogRead(0);
+   // Randomize the random number generator by reading the A1 voltage
+   //    and using that as a seed. Since A1 is floating, it's value is
+   //    bouncing, it's value is constantly changing (by a small 
+   //    amount, but enough). This is a known 'hack' in the Arduino
+   //    world to get around the fact that the random number generator
+   //    *always* starts with the same value if not randomized first.
+   randomSeedValue = analogRead(1);
    randomSeed(randomSeedValue);
+
+   // Wait here until the START button is pressed, or return
+   //   immediately if there is no LCD
+   controller.start();
      
-   // Set the competition start and end time
+   // Now that the competition has started, get the timestamp value
    startTimestamp = millis();
-   endTimestamp = startTimestamp + MATCH_RUNTIME;
    
    // Initialize processing for each stage
    stage1.start(startTimestamp);
@@ -88,19 +103,21 @@ void setup()
 
 void loop() 
 {  
-   uint32_t now = millis();
+   uint32_t now = millis() - startTimestamp;
    int score = 0;
 
    // If the competition is still running, invoke each stage step (poor man's cooperative tasker)   
-   if (now < endTimestamp) {
+   if ((now < MATCH_RUNTIME) && (BTN_STOP != (controller.buttons() & BTN_STOP))) {
+      controller.step(now);
       stage1.step(now);
       stage2.step(now);
       stage3.step(now);
-
+      
    // Else the competition is over, so stop everything and report the results
    } else {
    
       // Stop all the stage functions
+      controller.stop(now);
       stage1.stop(now);
       stage2.stop(now);
       stage3.stop(now);
@@ -115,6 +132,7 @@ void loop()
       Serial.print("\n\n");
       
       // Print out more detail on each stage
+      controller.report(now, score);
       stage1.report();
       stage2.report();
       stage3.report();

@@ -6,9 +6,13 @@
  *
  ********************************************************************/
 
+#include <MsTimer2.h>
+
 #include "Arduino.h"
 #include "Stage3.h"
-#include <MsTimer2.h>
+
+#include "Controller.h"
+extern Controller controller;
 
 #define ENCODER_A_PIN     3     // This one is an interrupt pin
 #define ENCODER_B_PIN     4     // This is a standard (not interrupt) pin
@@ -59,8 +63,8 @@ void Stage3::start(uint32_t timestamp)
   pinMode(BLUE_LED_PIN,   OUTPUT);
 
   /* Start the blink at 5hz rate (200ms period, 100ms irq rate */
-//  MsTimer2::set(100, blinkQuadratureLEDs);
-//  MsTimer2::start();
+  MsTimer2::set(100, blinkQuadratureLEDs);
+  MsTimer2::start();
 
   /* Get the initial state of the two quadrature pins */
   oldState = 0;
@@ -71,10 +75,10 @@ void Stage3::start(uint32_t timestamp)
   attachInterrupt(1, updateEncoder, CHANGE);
 
   /* Initial state of the LEDs is blinking white */
-  digitalWrite(RED_LED_PIN,    HIGH);
-  digitalWrite(GREEN_LED_PIN,  HIGH);
-  digitalWrite(BLUE_LED_PIN,   HIGH);
-  digitalWrite(ENABLE_LED_PIN, LOW);
+  digitalWrite(RED_LED_PIN,    LOW);
+  digitalWrite(GREEN_LED_PIN,  LOW);
+  digitalWrite(BLUE_LED_PIN,   LOW);
+  digitalWrite(ENABLE_LED_PIN, HIGH);
 }
 
 
@@ -86,9 +90,9 @@ void Stage3::stop(uint32_t timestamp)
   delay(1);
 
   /* Turn off the leds and the blink so the knob is off at contest end */
-  digitalWrite(RED_LED_PIN,    LOW);
-  digitalWrite(GREEN_LED_PIN,  LOW);
-  digitalWrite(BLUE_LED_PIN,   LOW);
+  digitalWrite(RED_LED_PIN,    HIGH);
+  digitalWrite(GREEN_LED_PIN,  HIGH);
+  digitalWrite(BLUE_LED_PIN,   HIGH);
   digitalWrite(ENABLE_LED_PIN, LOW);
 }
 
@@ -110,9 +114,9 @@ void Stage3::step(uint32_t timestamp)
       Serial.println(direction);
    }
    
-   digitalWrite(RED_LED_PIN,   (LEFT_BLUE != direction));
-   digitalWrite(BLUE_LED_PIN,  (RIGHT_RED != direction));
-   digitalWrite(GREEN_LED_PIN, (CENTER_WHITE == direction));
+   digitalWrite(RED_LED_PIN,   !(LEFT_BLUE != direction));
+   digitalWrite(BLUE_LED_PIN,  !(RIGHT_RED != direction));
+   digitalWrite(GREEN_LED_PIN, !(CENTER_WHITE == direction));
 
    if ((CENTER_WHITE != direction) && (blinkEnabled)) {
       blinkEnabled = false;
@@ -130,6 +134,15 @@ void Stage3::report(void)
   Serial.print("STAGE SCORE: ");
   Serial.print(score());
   Serial.print("\n\n");   
+ 
+   if (controller.attached()) {
+      controller.lcdp()->setCursor(0,3);
+      controller.lcdp()->print("2: ");
+      controller.lcdp()->print(String(score()));
+      controller.lcdp()->print(" ");
+      controller.lcdp()->print(String("32154"));
+   }
+ 
 }
 
 

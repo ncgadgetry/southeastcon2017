@@ -1,3 +1,5 @@
+#include <LiquidCrystal_I2C.h>
+
 /********************************************************************
  *
  * SoutheastCon 2017 Arena control - Stage2.cpp
@@ -6,9 +8,13 @@
  *
  ********************************************************************/
 
+#include <Adafruit_NeoPixel.h>
+
 #include "Arduino.h"
 #include "Stage2.h"
-#include <Adafruit_NeoPixel.h>
+
+#include "Controller.h"
+extern Controller controller;
 
 /*
  * Defines used by this stage
@@ -48,6 +54,7 @@ enum states {
  */
 static uint32_t white, black, red, lt_red, green, lt_green, blue, amber;
 static volatile uint16_t hit = 0;
+int ignore_hits = true;
 enum states curState  = INITIAL;
 enum states nextState = COUNTDOWN_1;
 uint32_t nextStateTimestamp = 0;
@@ -67,6 +74,7 @@ static void vibrate();
 static int hit_detected(void);
 static void singleColor(uint32_t c);
 static void activateField(boolean state);
+
 
 /* This array is the "fighting pattern" of ON/OFF/ON for the magnetic field. Since the
  *    field is always on for 2 seconds, the ON time is not listed and the table only
@@ -101,6 +109,8 @@ void Stage2::start(uint32_t timestamp)
 {
    _startTimestamp = timestamp;
    
+   attachInterrupt(0, vibrate, CHANGE);
+
    /* Predefine the colors for convenience */
    black    = strip.Color(  0,  0,  0);
    white    = strip.Color(255,255,255);
@@ -114,7 +124,7 @@ void Stage2::start(uint32_t timestamp)
    /* initial state of the lightsaber until contest begins */
    strip.begin();
    singleColor(black);
-   
+
    /* Initialize the interrupt routine for vibration sensor */
    pinMode(VIBRATE_PIN, INPUT_PULLUP);
 
@@ -233,7 +243,7 @@ void Stage2::step(uint32_t timestamp)
        */
       case WAITING:
           /* Activate the field and interrupt and wait for first hit */
-          attachInterrupt(0, vibrate, CHANGE);
+          ignore_hits = false;
           activateField(true);
           
           /* the stage 2 lightsaber battle begins when the first hit is detected */
@@ -335,6 +345,16 @@ void Stage2::report(void) {
    Serial.print("]\nSTAGE SCORE: ");
    Serial.print(score());
    Serial.print("\n\n");   
+   
+   if (controller.attached()) {
+      controller.lcdp()->setCursor(0,2);
+      controller.lcdp()->print("2: ");
+      controller.lcdp()->print(String(score()));
+      controller.lcdp()->print(" #");
+      controller.lcdp()->print(patternIndex);
+      controller.lcdp()->print(" ");
+      controller.lcdp()->print(String(hitReport));
+   }
 }
 
 
@@ -379,10 +399,12 @@ static void vibrate() {
  */
 static int hit_detected(void) {
   int detected = 0;
-  if (0 != hit) {
+  
+  if (hit && !ignore_hits) {
      detected = 1;
      hit = 0;
   }
+  
   return detected;
 }
 
