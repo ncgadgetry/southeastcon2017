@@ -28,16 +28,13 @@ class Stage1
    public:
       Stage1();
 
-      void start(uint32_t timestamp);
+      void start(void);
       void stop(uint32_t timestamp);
       void step(uint32_t timestamp);
       void report(void);
       int  score(void);
             
-      uint16_t pattern();
-
-   private:
-      uint32_t _startTimestamp;
+      uint16_t pattern(void);
 };
 
 #endif

@@ -46,10 +46,8 @@ Stage3::Stage3()
 {
 }
 
-void Stage3::start(uint32_t timestamp) 
+void Stage3::start() 
 {
-  _startTimestamp = timestamp;
-
   /* Set both quadrature channels to input and turn on pullup resistors */
   pinMode(ENCODER_A_PIN, INPUT); 
   pinMode(ENCODER_B_PIN, INPUT);

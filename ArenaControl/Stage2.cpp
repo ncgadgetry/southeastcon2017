@@ -105,10 +105,8 @@ Stage2::Stage2()
 }
 
 
-void Stage2::start(uint32_t timestamp) 
+void Stage2::start() 
 {
-   _startTimestamp = timestamp;
-   
    attachInterrupt(0, vibrate, CHANGE);
 
    /* Predefine the colors for convenience */
@@ -124,7 +122,9 @@ void Stage2::start(uint32_t timestamp)
    /* initial state of the lightsaber until contest begins */
    strip.begin();
    singleColor(black);
-
+   strip.setPixelColor(7, blue);
+   strip.show();
+   
    /* Initialize the interrupt routine for vibration sensor */
    pinMode(VIBRATE_PIN, INPUT_PULLUP);
 
@@ -189,8 +189,11 @@ void Stage2::step(uint32_t timestamp)
       * Next state: COUNTDOWN_2 after 1 second
       */
      case COUNTDOWN_1: 
-          singleColor(red);
-          
+          singleColor(amber);
+          strip.setPixelColor(7, green);
+          strip.setPixelColor(6, green);
+          strip.show();
+
           nextState = COUNTDOWN_2;
           nextStateTimestamp = timestamp + ONE_SECOND;
           break;
@@ -201,9 +204,9 @@ void Stage2::step(uint32_t timestamp)
        * Next state: COUNTDOWN_3 after 1 second
        */      
       case COUNTDOWN_2:
-          for (uint32_t i=0; i < strip.numPixels(); i++) {
-             strip.setPixelColor(i, ((i < (strip.numPixels()/2)) ? red : amber));
-          }
+          singleColor(amber);
+          strip.setPixelColor(4, green);
+          strip.setPixelColor(3, green);
           strip.show();
           
           nextState = COUNTDOWN_3;
@@ -217,7 +220,11 @@ void Stage2::step(uint32_t timestamp)
        * Next state: START after 1 second
        */
       case COUNTDOWN_3:
-          singleColor(amber);          
+          singleColor(amber);
+          strip.setPixelColor(1, green);
+          strip.setPixelColor(0, green);
+          strip.show();
+
           nextState = START;
           nextStateTimestamp = timestamp + ONE_SECOND;
           break;

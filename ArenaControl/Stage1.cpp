@@ -38,10 +38,8 @@ Stage1::Stage1()
 }
 
 
-void Stage1::start(uint32_t timestamp) 
+void Stage1::start() 
 {
-   _startTimestamp = timestamp;
-   
    /* Since we don't have enough I/Os on the Arduino UNO to control
     *    the 16 relays, we use an I2C port expander. An alternative
     *    idea would have been to use a larger Arduino, but this 

@@ -57,9 +57,11 @@ void Controller::start()
 
     lcd.setCursor(1,2);
     lcd.print((sequence % 3) ? "START" : "     ");
-    
-    lcd.setCursor(sequence/3,3);
-    lcd.print(" vvv    ");
+
+    lcd.setCursor(0,3);
+    lcd.print("      ");
+    lcd.setCursor((sequence%9)/3,3);
+    lcd.print("vvv");
     
     sequence = (sequence + 1) % 9;
     delay(100);
@@ -100,11 +102,13 @@ void Controller::step(uint32_t timestamp)
       lcd.clear();
       lcd.home();
       lcd.print("Running time: ");
-      lcd.setCursor(14,2);
-      lcd.print("[    ]");
+      lcd.setCursor(0,2);
+      lcd.print("press here to [    ]");
    } else {
       lcd.setCursor(14,0);
-      lcd.print(timestamp / 1000);
+      lcd.print((timestamp-3000) / 1000);
+      lcd.print(".");
+      lcd.print((timestamp/100) % 10);
 
       lcd.setCursor(15,2);
       lcd.print((timestamp % 300) ? "STOP" : "    ");
@@ -128,7 +132,7 @@ void Controller::report(uint32_t timestamp, int score)
    lcd.print(score);
    lcd.setCursor(11,0);
    lcd.print("TIME:");
-   lcd.print((timestamp+500) / 1000);
+   lcd.print(((timestamp-3000)+500) / 1000);
 }
 
 

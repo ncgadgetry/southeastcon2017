@@ -19,14 +19,11 @@ class Stage3
    public:
       Stage3();
 
-      void start(uint32_t timestamp);
+      void start(void);
       void stop(uint32_t timestamp);
       void step(uint32_t timestamp);
       void report(void);
       int  score(void);
-
-   private:
-      uint32_t _startTimestamp;
 };
 
 #endif
