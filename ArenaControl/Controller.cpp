@@ -17,6 +17,7 @@
 boolean lcdAttached = false;
 boolean initialDisplay = true;
 
+
 Sainsmart_I2CLCD lcd(LCD_ADDRESS,20,4);
 
 Controller::Controller(uint8_t lcd_Addr, uint8_t lcd_cols, uint8_t lcd_rows) 
@@ -38,9 +39,9 @@ void Controller::start()
    
   // Else we will use the LCD and buttons, so initialize the buttons as digital input
   int b;
-  for (b=0; b <= 3; b++) {  
-     pinMode(A0+b, INPUT);
-     digitalWrite(A0+b, HIGH);
+  for (b=A0; b <= A3; b++) {  
+     pinMode(b, INPUT);
+     digitalWrite(b, HIGH);
   }
 
   // Initialize the display and print the splash screen  
@@ -90,12 +91,15 @@ void Controller::step(uint32_t timestamp)
    
    lcd.setCursor(0,2);
    
-   if (1000 > timestamp) {
+   if (MSECS > timestamp) {
       lcd.print("  THREE seconds...");
-   } else if (2000 > timestamp) {
+      
+   } else if ((2*MSECS) > timestamp) {
       lcd.print("  TWO seconds...  ");
-   } else if (3000 > timestamp) {
+      
+   } else if ((3*MSECS) > timestamp) {
       lcd.print("  ONE second...   ");
+      
    } else if (initialDisplay) {
       initialDisplay = false;
       
@@ -104,9 +108,10 @@ void Controller::step(uint32_t timestamp)
       lcd.print("Running time: ");
       lcd.setCursor(0,2);
       lcd.print("press here to [    ]");
+      
    } else {
       lcd.setCursor(14,0);
-      lcd.print((timestamp-3000) / 1000);
+      lcd.print((timestamp / MSECS) - COUNTDOWN_TIME);
       lcd.print(".");
       lcd.print((timestamp/100) % 10);
 
@@ -127,12 +132,23 @@ void Controller::report(uint32_t timestamp, int score)
       return;
    }
    
+   uint32_t runTime = 0;
+
+   /* If we are still in the countdown, set the run time to 0 */   
+   if (timestamp < COUNTDOWN_TIME * MSECS) {
+      runTime = 0;
+      
+   /* Else deduct the countdown time and round up to nearest second */
+   } else {
+      runTime - (COUNTDOWN_TIME * MSECS) + (MSECS / 2);
+   }
+   
    lcd.clear();
    lcd.print("SCORE:");
    lcd.print(score);
    lcd.setCursor(11,0);
    lcd.print("TIME:");
-   lcd.print(((timestamp-3000)+500) / 1000);
+   lcd.print(runTime / MSECS);
 }
 
 
@@ -145,8 +161,9 @@ boolean Controller::attached()
 
 int Controller::buttons()
 {
-    if (false == lcdAttached) {
-       Serial.println("ERROR: LCD NOT ATTACHED");
+   // If no controller, always assume buttons are not active
+   if (false == lcdAttached) {
+       return 0;
     }
      
     int bit;

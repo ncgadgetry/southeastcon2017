@@ -14,6 +14,7 @@
 
 #include "Arduino.h"
 #include "Sainsmart_I2CLCD.h"
+#include "ArenaControl.h"
 
 #define BTN_START   (1 << 0)
 #define BTN_STOP    (1 << 3)

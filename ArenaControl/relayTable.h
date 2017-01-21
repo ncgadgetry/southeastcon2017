@@ -1,6 +1,6 @@
 /********************************************************************
  *
- * SoutheastCon 2017 Arena control - Stage1.cpp
+ * SoutheastCon 2017 Arena control - relayTable.h
  *
  * This is the relay control table used to select the resistor (R)), 
  *    capacitor (C)), inductor (I)), diode (D and d - two orientations)
@@ -15,9 +15,10 @@
 
 /* The Arduino bit constant type only allows up to an 8 bit maximum
  *    field size, so this allows using the bit constant to define
- *    all sixteen bits
+ *    all sixteen bits.
  */
-#define SIXTEEN_BITS(high,low) ((high << 8) | low)
+#define UINT16(x)  ((uint16_t)(x))
+#define SIXTEEN_BITS(high,low) ((UINT16(high) << 8) | UINT16(low))
 
 #define RELAY_TABLE_LENGTH (sizeof(relayTable) / sizeof(relayTable[0]))
 

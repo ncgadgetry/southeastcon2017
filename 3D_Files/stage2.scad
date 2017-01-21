@@ -59,10 +59,12 @@ wire_radius = 1.5;
 //   be passed in to it to control rendering parts of the model at a 
 //   time for review and/or printing
 
-//draw("innersupport");
-//draw("everything");
-//draw("bracket+hilt");
-draw("blade");
+draw("everything");            // see everything
+//draw("bracket+hilt");        // show the hilt and bracket (black PLA)
+//draw("blade");               // lightsaber blade (PLA clear)
+//draw("innersupport");        // inner support (PLA clear)
+//draw("spool_outer");         // 1/2 of spool (PLA any color)
+//draw("spool_inner");         // 1/2 of spool (PLA any color)
 
 module draw(what) {
 

@@ -20,7 +20,7 @@ extern Controller controller;
  * Defines used by this stage
  */
 #define HALF_SECOND         500     //  500ms
-#define ONE_SECOND          1000    // 1000ms
+#define ONE_SECOND          MSECS   // 1000ms
 
 #define VIBRATE_PIN         2       // IRQ0 on UNO (only one of two)
 
@@ -107,6 +107,12 @@ Stage2::Stage2()
 
 void Stage2::start() 
 {
+   /* Set the output bit for the magnet force field and deactivate it */
+   pinMode(FIELD_PIN, OUTPUT);
+   activateField(false);  
+
+   /* Initialize the interrupt routine for vibration sensor */
+   pinMode(VIBRATE_PIN, INPUT_PULLUP);
    attachInterrupt(0, vibrate, CHANGE);
 
    /* Predefine the colors for convenience */
@@ -125,13 +131,6 @@ void Stage2::start()
    strip.setPixelColor(7, blue);
    strip.show();
    
-   /* Initialize the interrupt routine for vibration sensor */
-   pinMode(VIBRATE_PIN, INPUT_PULLUP);
-
-   /* Set the output bit for the magnet force field and deactivate it */
-   pinMode(FIELD_PIN, OUTPUT);
-   activateField(false);  
-
    /* Initialize the hit report log to empty */
    memset(hitReport, '.', sizeof(hitReport));
    hitReport[sizeof(hitReport)-1] = '\0';
@@ -153,7 +152,7 @@ void Stage2::step(uint32_t timestamp)
    /* If the hit timer is on, then the lightsaber is either red or blue, so
     *    check if it is time to turn the lightsaber back off 
     */
-   if ((0 != hitTimeout) && (timestamp > hitTimeout)) {
+   if ((0 != hitTimeout) && (millis() > hitTimeout)) {
       hitTimeout = 0;
       singleColor(black);
    }
@@ -161,7 +160,7 @@ void Stage2::step(uint32_t timestamp)
    /* If the next timestamp has not yet occurred, then not time to advance
     *    to the next state, so nothing more to do
     */
-   if ((INITIAL != curState) && (timestamp < nextStateTimestamp)) {
+   if ((INITIAL != curState) && (millis() < nextStateTimestamp)) {
       return;
    }
    
@@ -189,13 +188,13 @@ void Stage2::step(uint32_t timestamp)
       * Next state: COUNTDOWN_2 after 1 second
       */
      case COUNTDOWN_1: 
-          singleColor(amber);
+          singleColor(red);
           strip.setPixelColor(7, green);
           strip.setPixelColor(6, green);
           strip.show();
 
           nextState = COUNTDOWN_2;
-          nextStateTimestamp = timestamp + ONE_SECOND;
+          nextStateTimestamp = millis() + ONE_SECOND;
           break;
 
       /* This is the continuation of the countdown. The top half of the lightsaber
@@ -204,13 +203,13 @@ void Stage2::step(uint32_t timestamp)
        * Next state: COUNTDOWN_3 after 1 second
        */      
       case COUNTDOWN_2:
-          singleColor(amber);
+          singleColor(red);
           strip.setPixelColor(4, green);
           strip.setPixelColor(3, green);
           strip.show();
           
           nextState = COUNTDOWN_3;
-          nextStateTimestamp = timestamp + ONE_SECOND;
+          nextStateTimestamp = millis() + ONE_SECOND;
           break;
 
       /* This is the next and final of the countdown states. The entire lightsaber
@@ -220,13 +219,13 @@ void Stage2::step(uint32_t timestamp)
        * Next state: START after 1 second
        */
       case COUNTDOWN_3:
-          singleColor(amber);
+          singleColor(red);
           strip.setPixelColor(1, green);
           strip.setPixelColor(0, green);
           strip.show();
 
           nextState = START;
-          nextStateTimestamp = timestamp + ONE_SECOND;
+          nextStateTimestamp = millis() + ONE_SECOND;
           break;
 
       /* The entire lightsaber lights green to indicate the match has begun and
@@ -240,7 +239,7 @@ void Stage2::step(uint32_t timestamp)
       case START:
           singleColor(green);
           nextState = WAITING;
-          nextStateTimestamp = timestamp + ONE_SECOND; // TODO:reset this back to 5 seconds
+          nextStateTimestamp = millis() + ONE_SECOND; // TODO:reset this back to 5 seconds
           break;
           
       /* In this stage, we are waiting for the first hit of the 
@@ -278,7 +277,7 @@ void Stage2::step(uint32_t timestamp)
       case FIELD_OFF_NEUTRAL:
           activateField(false);
           nextState = FIELD_OFF;
-          nextStateTimestamp = timestamp + HALF_SECOND;
+          nextStateTimestamp = millis() + HALF_SECOND;
           break;
          
       /* In this state, the field is off, but the vibration sensor is active
@@ -292,9 +291,9 @@ void Stage2::step(uint32_t timestamp)
              singleColor(red);
              hitTimeout = millis() + FLASH_TIMEOUT;
           }
-          if ((timestamp-nextStateTimestamp) > (*patternPtr * ONE_SECOND)) {
+          if ((millis()-nextStateTimestamp) > (*patternPtr * ONE_SECOND)) {
              nextState = FIELD_ON;
-             nextStateTimestamp = timestamp;
+             nextStateTimestamp = millis();
              hitReportPtr++;
           }
           break;
@@ -313,10 +312,10 @@ void Stage2::step(uint32_t timestamp)
              hitTimeout = millis() + FLASH_TIMEOUT;
              activateField(false);
           }
-          if ((timestamp-nextStateTimestamp) > (2*ONE_SECOND)) {
+          if ((millis()-nextStateTimestamp) > (2*ONE_SECOND)) {
              patternPtr++;
              nextState = (0 == *patternPtr) ? STOPPED : FIELD_OFF_NEUTRAL;
-             nextStateTimestamp = timestamp;
+             nextStateTimestamp = millis();
              hitReportPtr++;
           }
           break;

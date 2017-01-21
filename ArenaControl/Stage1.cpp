@@ -49,7 +49,6 @@ void Stage1::start()
     */
    relayIndex   = random(RELAY_TABLE_LENGTH);
    relayPattern = relayTable[relayIndex];
-   setRelays(relayPattern);
 }
 
 
@@ -64,7 +63,13 @@ void Stage1::stop(uint32_t timestamp)
 /* Step - cooperative multi-tasker between the stages */
 void Stage1::step(uint32_t timestamp) 
 {
-   /* nothing to do */
+   static int firstTime = true;
+   
+   /* Set the relays once the contest starts - nothing to do otherwise */
+   if (firstTime) {
+       setRelays(relayPattern);
+       firstTime = false;
+   }
 }
 
 

@@ -22,6 +22,7 @@
 #define Stage1_h
 
 #include "Arduino.h"
+#include "ArenaControl.h"
 
 class Stage1 
 {

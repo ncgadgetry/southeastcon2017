@@ -63,13 +63,10 @@ Stage1 stage1;
 Stage2 stage2;
 Stage3 stage3;
 Controller controller;
+uint32_t startTimestamp = 0;
 
-/* Length of match runtime - should be 4 minutes, but using 1 minute for debugging */
-#define MATCH_RUNTIME    ((1L*60L+3L)*1000L)  // add 3 seconds for countdown period
 
 int randomSeedValue = 0;
-uint32_t startTimestamp = 0;
-uint32_t endTimestamp   = 0;
 
 void setup() 
 {
@@ -93,12 +90,7 @@ void setup()
    // Wait here until the START button is pressed, or return
    //   immediately if there is no LCD
    controller.start();
-     
-   // Now that the competition has started, get the timestamp value
    startTimestamp = millis();
-      
-   Serial.println(startTimestamp);
-   Serial.println(endTimestamp);
 }
 
 void loop() 

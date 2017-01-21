@@ -38,4 +38,17 @@
  *
  * COLLABORATORS / HONORS (for helping identify new issues in the software):
  *    YOUR NAME COULD BE HERE FOR EVERYONE TO SEE!
+ *
+ * Pete Soper - SDevCS, LLC
+ * Koty Turner - University of Alabama robotics team
  */
+
+/* Number of milliseconds in a second */
+#define MSECS            1000
+
+/* Number of seconds in countdown before start of competition */
+#define COUNTDOWN_TIME   3
+
+/* Length of match runtime - should be 4 minutes, but using 1 minute for debugging */
+#define MATCH_RUNTIME    ((1L*60L+COUNTDOWN_TIME)*MSECS)
+

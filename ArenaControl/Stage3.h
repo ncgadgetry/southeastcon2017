@@ -13,6 +13,7 @@
 #define Stage3_h
 
 #include "Arduino.h"
+#include "ArenaControl.h"
 
 class Stage3 
 {
