@@ -88,7 +88,7 @@ void Stage1::report(void)
    
    if (controller.attached()) {
       controller.lcdp()->setCursor(0,1);
-      controller.lcdp()->print("1: N/A #");
+      controller.lcdp()->print("1: #");
       controller.lcdp()->print(relayIndex);
       controller.lcdp()->print(" ");
       controller.lcdp()->print(String(relayPattern, 16));

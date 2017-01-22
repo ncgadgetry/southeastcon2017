@@ -140,7 +140,7 @@ void Controller::report(uint32_t timestamp, int score)
       
    /* Else deduct the countdown time and round up to nearest second */
    } else {
-      runTime - (COUNTDOWN_TIME * MSECS) + (MSECS / 2);
+      runTime = timestamp - (COUNTDOWN_TIME * MSECS) + (MSECS / 2);
    }
    
    lcd.clear();
