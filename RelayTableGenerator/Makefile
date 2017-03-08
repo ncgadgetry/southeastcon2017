@@ -12,3 +12,6 @@ test: relayTable.h
 
 install: relayTable.h
 	cp relayTable.h ../ArenaControl
+
+clean: 
+	rm -f combinations

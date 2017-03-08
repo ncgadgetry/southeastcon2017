@@ -239,7 +239,7 @@ void Stage2::step(uint32_t timestamp)
       case START:
           singleColor(green);
           nextState = WAITING;
-          nextStateTimestamp = millis() + ONE_SECOND; // TODO:reset this back to 5 seconds
+          nextStateTimestamp = millis() + (5 * ONE_SECOND);
           break;
           
       /* In this stage, we are waiting for the first hit of the 

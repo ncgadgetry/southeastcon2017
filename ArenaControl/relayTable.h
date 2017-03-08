@@ -1,133 +1,116 @@
-/********************************************************************
+/*
+ * Southeastcon 2017 Stage 1 relay tree control patterns
  *
- * SoutheastCon 2017 Arena control - relayTable.h
+ * Table consists of binary pattern to the 16 relays, followed
+ *    by the number of turns required at stage 3
  *
- * This is the relay control table used to select the resistor (R)), 
- *    capacitor (C)), inductor (I)), diode (D and d - two orientations)
- *    and wire (W) pattern used in stage 1.
+ * The table contains the bit patterns for the relay (active
+ *    low), and the number of turns for the quadrature for each
+ *    component (in wire, resistor, capacitor, inductor,
+ *    and diode order). The comments for each entry contain
+ *    what component is at each pad, followed by the
+ *    sequential combination number.
  * This does not allow all possible combinations), but is a reasonable
- *    enough size tree of values (106 combinations) that it is not 
+ *    enough size tree of values (88 combinations) that it is not 
  *    possible to guess), and uses only 16 relays (as compared to 25 
  *    for a simplistic approach that allows all combinations).
  *
  * This table was computer generated - do not hand edit!!
- ********************************************************************/
-
-/* The Arduino bit constant type only allows up to an 8 bit maximum
- *    field size, so this allows using the bit constant to define
- *    all sixteen bits.
  */
-#define UINT16(x)  ((uint16_t)(x))
-#define SIXTEEN_BITS(high,low) ((UINT16(high) << 8) | UINT16(low))
 
 #define RELAY_TABLE_LENGTH (sizeof(relayTable) / sizeof(relayTable[0]))
 
-uint16_t relayTable[] = {
-     SIXTEEN_BITS(B00001010, B11100010), // DIRCW - #0
-     SIXTEEN_BITS(B10001010, B11100010), // dIRCW - #1
-     SIXTEEN_BITS(B01010000, B11100010), // DIRWC - #2
-     SIXTEEN_BITS(B11010000, B11100010), // dIRWC - #3
-     SIXTEEN_BITS(B00111010, B00100010), // DIWCR - #4
-     SIXTEEN_BITS(B10111010, B00100010), // dIWCR - #5
-     SIXTEEN_BITS(B00001010, B00011010), // DRICW - #6
-     SIXTEEN_BITS(B10001010, B00011010), // dRICW - #7
-     SIXTEEN_BITS(B01010000, B00011010), // DRIWC - #8
-     SIXTEEN_BITS(B11010000, B00011010), // dRIWC - #9
-     SIXTEEN_BITS(B01011000, B00011010), // DCIWR - #10
-     SIXTEEN_BITS(B11011000, B00011010), // dCIWR - #11
-     SIXTEEN_BITS(B00110000, B00000010), // DRWIC - #12
-     SIXTEEN_BITS(B10110000, B00000010), // dRWIC - #13
-     SIXTEEN_BITS(B00001000, B11000010), // DCRIW - #14
-     SIXTEEN_BITS(B10001000, B11000010), // dCRIW - #15
-     SIXTEEN_BITS(B00111000, B00000010), // DCWIR - #16
-     SIXTEEN_BITS(B10111000, B00000010), // dCWIR - #17
-     SIXTEEN_BITS(B00001010, B11010100), // IDRCW - #18
-     SIXTEEN_BITS(B10001010, B11010100), // IdRCW - #19
-     SIXTEEN_BITS(B01010000, B11010100), // IDRWC - #20
-     SIXTEEN_BITS(B11010000, B11010100), // IdRWC - #21
-     SIXTEEN_BITS(B00111010, B00010100), // IDWCR - #22
-     SIXTEEN_BITS(B10111010, B00010100), // IdWCR - #23
-     SIXTEEN_BITS(B00001010, B10011100), // RDICW - #24
-     SIXTEEN_BITS(B10001010, B10011100), // RdICW - #25
-     SIXTEEN_BITS(B01010000, B10011100), // RDIWC - #26
-     SIXTEEN_BITS(B11010000, B10011100), // RdIWC - #27
-     SIXTEEN_BITS(B01010100, B00011100), // CDIWR - #28
-     SIXTEEN_BITS(B11010100, B00011100), // CdIWR - #29
-     SIXTEEN_BITS(B00001010, B00011100), // WDICR - #30
-     SIXTEEN_BITS(B10001010, B00011100), // WdICR - #31
-     SIXTEEN_BITS(B00110000, B10000100), // RDWIC - #32
-     SIXTEEN_BITS(B10110000, B10000100), // RdWIC - #33
-     SIXTEEN_BITS(B00000100, B11000100), // CDRIW - #34
-     SIXTEEN_BITS(B10000100, B11000100), // CdRIW - #35
-     SIXTEEN_BITS(B00000000, B11000100), // WDRIC - #36
-     SIXTEEN_BITS(B10000000, B11000100), // WdRIC - #37
-     SIXTEEN_BITS(B00110100, B00000100), // CDWIR - #38
-     SIXTEEN_BITS(B10110100, B00000100), // CdWIR - #39
-     SIXTEEN_BITS(B00001010, B00010011), // IRDCW - #40
-     SIXTEEN_BITS(B10001010, B00010011), // IRdCW - #41
-     SIXTEEN_BITS(B01010000, B00010011), // IRDWC - #42
-     SIXTEEN_BITS(B11010000, B00010011), // IRdWC - #43
-     SIXTEEN_BITS(B01011000, B00010011), // ICDWR - #44
-     SIXTEEN_BITS(B11011000, B00010011), // ICdWR - #45
-     SIXTEEN_BITS(B00001010, B10100011), // RIDCW - #46
-     SIXTEEN_BITS(B10001010, B10100011), // RIdCW - #47
-     SIXTEEN_BITS(B01010000, B10100011), // RIDWC - #48
-     SIXTEEN_BITS(B11010000, B10100011), // RIdWC - #49
-     SIXTEEN_BITS(B01010100, B00100011), // CIDWR - #50
-     SIXTEEN_BITS(B11010100, B00100011), // CIdWR - #51
-     SIXTEEN_BITS(B00001010, B00100011), // WIDCR - #52
-     SIXTEEN_BITS(B10001010, B00100011), // WIdCR - #53
-     SIXTEEN_BITS(B00001000, B10000011), // RCDIW - #54
-     SIXTEEN_BITS(B10001000, B10000011), // RCdIW - #55
-     SIXTEEN_BITS(B00000100, B00000011), // CRDIW - #56
-     SIXTEEN_BITS(B10000100, B00000011), // CRdIW - #57
-     SIXTEEN_BITS(B00000000, B00000011), // WRDIC - #58
-     SIXTEEN_BITS(B10000000, B00000011), // WRdIC - #59
-     SIXTEEN_BITS(B00001000, B00000011), // WCDIR - #60
-     SIXTEEN_BITS(B10001000, B00000011), // WCdIR - #61
-     SIXTEEN_BITS(B00110000, B00010101), // IRWDC - #62
-     SIXTEEN_BITS(B10110000, B00010101), // IRWdC - #63
-     SIXTEEN_BITS(B00001000, B11010101), // ICRDW - #64
-     SIXTEEN_BITS(B10001000, B11010101), // ICRdW - #65
-     SIXTEEN_BITS(B00111000, B00010101), // ICWDR - #66
-     SIXTEEN_BITS(B10111000, B00010101), // ICWdR - #67
-     SIXTEEN_BITS(B00110000, B10100101), // RIWDC - #68
-     SIXTEEN_BITS(B10110000, B10100101), // RIWdC - #69
-     SIXTEEN_BITS(B00000100, B11100101), // CIRDW - #70
-     SIXTEEN_BITS(B10000100, B11100101), // CIRdW - #71
-     SIXTEEN_BITS(B00000000, B11100101), // WIRDC - #72
-     SIXTEEN_BITS(B10000000, B11100101), // WIRdC - #73
-     SIXTEEN_BITS(B00110100, B00100101), // CIWDR - #74
-     SIXTEEN_BITS(B10110100, B00100101), // CIWdR - #75
-     SIXTEEN_BITS(B00001000, B10011101), // RCIDW - #76
-     SIXTEEN_BITS(B10001000, B10011101), // RCIdW - #77
-     SIXTEEN_BITS(B00000100, B00011101), // CRIDW - #78
-     SIXTEEN_BITS(B10000100, B00011101), // CRIdW - #79
-     SIXTEEN_BITS(B00000000, B00011101), // WRIDC - #80
-     SIXTEEN_BITS(B10000000, B00011101), // WRIdC - #81
-     SIXTEEN_BITS(B00001000, B00011101), // WCIDR - #82
-     SIXTEEN_BITS(B10001000, B00011101), // WCIdR - #83
-     SIXTEEN_BITS(B00111010, B00010000), // IRWCD - #84
-     SIXTEEN_BITS(B10111010, B00010000), // IRWCd - #85
-     SIXTEEN_BITS(B01011000, B11010000), // ICRWD - #86
-     SIXTEEN_BITS(B11011000, B11010000), // ICRWd - #87
-     SIXTEEN_BITS(B00111010, B10100000), // RIWCD - #88
-     SIXTEEN_BITS(B10111010, B10100000), // RIWCd - #89
-     SIXTEEN_BITS(B01010100, B11100000), // CIRWD - #90
-     SIXTEEN_BITS(B11010100, B11100000), // CIRWd - #91
-     SIXTEEN_BITS(B00001010, B11100000), // WIRCD - #92
-     SIXTEEN_BITS(B10001010, B11100000), // WIRCd - #93
-     SIXTEEN_BITS(B01011000, B10011000), // RCIWD - #94
-     SIXTEEN_BITS(B11011000, B10011000), // RCIWd - #95
-     SIXTEEN_BITS(B01010100, B00011000), // CRIWD - #96
-     SIXTEEN_BITS(B11010100, B00011000), // CRIWd - #97
-     SIXTEEN_BITS(B00001010, B00011000), // WRICD - #98
-     SIXTEEN_BITS(B10001010, B00011000), // WRICd - #99
-     SIXTEEN_BITS(B00111000, B10000000), // RCWID - #100
-     SIXTEEN_BITS(B10111000, B10000000), // RCWId - #101
-     SIXTEEN_BITS(B00110100, B00000000), // CRWID - #102
-     SIXTEEN_BITS(B10110100, B00000000), // CRWId - #103
-     SIXTEEN_BITS(B00001000, B11000000), // WCRID - #104
-     SIXTEEN_BITS(B10001000, B11000000)  // WCRId - #105
-};
+uint16_t relayTable[][6] = {
 
+//     Bit pattern         __num turns__       pad
+//     for relays          W  R  C  I  D       parts   ID
+
+     { 0b0000010001011101, 5, 4, 3, 2, 1 }, // DICRW - #0
+     { 0b1000010001011101, 5, 4, 3, 2, 1 }, // dICRW - #1
+     { 0b0000101001011010, 3, 4, 5, 2, 1 }, // DIWRC - #2
+     { 0b1000101001011010, 3, 4, 5, 2, 1 }, // dIWRC - #3
+     { 0b0000010101011001, 4, 5, 3, 2, 1 }, // DICWR - #4
+     { 0b1000010101011001, 4, 5, 3, 2, 1 }, // dICWR - #5
+     { 0b0000001101011010, 3, 5, 4, 2, 1 }, // DIWCR - #6
+     { 0b1000001101011010, 3, 5, 4, 2, 1 }, // dIWCR - #7
+     { 0b0000001010000101, 5, 2, 4, 3, 1 }, // DRICW - #8
+     { 0b1000001010000101, 5, 2, 4, 3, 1 }, // dRICW - #9
+     { 0b0000101010000001, 4, 2, 5, 3, 1 }, // DRIWC - #10
+     { 0b1000101010000001, 4, 2, 5, 3, 1 }, // dRIWC - #11
+     { 0b0000101001000000, 2, 4, 5, 3, 1 }, // DWIRC - #12
+     { 0b1000101001000000, 2, 4, 5, 3, 1 }, // dWIRC - #13
+     { 0b0000001101000000, 2, 5, 4, 3, 1 }, // DWICR - #14
+     { 0b1000001101000000, 2, 5, 4, 3, 1 }, // dWICR - #15
+     { 0b0000010010100001, 4, 2, 3, 5, 1 }, // DRCWI - #16
+     { 0b1000010010100001, 4, 2, 3, 5, 1 }, // dRCWI - #17
+     { 0b0000001010100010, 3, 2, 4, 5, 1 }, // DRWCI - #18
+     { 0b1000001010100010, 3, 2, 4, 5, 1 }, // dRWCI - #19
+     { 0b0000010001100000, 2, 4, 3, 5, 1 }, // DWCRI - #20
+     { 0b1000010001100000, 2, 4, 3, 5, 1 }, // dWCRI - #21
+     { 0b0010010001001101, 5, 4, 3, 1, 2 }, // IDCRW - #22
+     { 0b1010010001001101, 5, 4, 3, 1, 2 }, // IdCRW - #23
+     { 0b0010101001001010, 3, 4, 5, 1, 2 }, // IDWRC - #24
+     { 0b1010101001001010, 3, 4, 5, 1, 2 }, // IdWRC - #25
+     { 0b0010010101001001, 4, 5, 3, 1, 2 }, // IDCWR - #26
+     { 0b1010010101001001, 4, 5, 3, 1, 2 }, // IdCWR - #27
+     { 0b0010001101001010, 3, 5, 4, 1, 2 }, // IDWCR - #28
+     { 0b1010001101001010, 3, 5, 4, 1, 2 }, // IdWCR - #29
+     { 0b0010001000000101, 5, 1, 4, 3, 2 }, // RDICW - #30
+     { 0b1010001000000101, 5, 1, 4, 3, 2 }, // RdICW - #31
+     { 0b0010101000000001, 4, 1, 5, 3, 2 }, // RDIWC - #32
+     { 0b1010101000000001, 4, 1, 5, 3, 2 }, // RdIWC - #33
+     { 0b0010000001000101, 5, 4, 1, 3, 2 }, // CDIRW - #34
+     { 0b1010000001000101, 5, 4, 1, 3, 2 }, // CdIRW - #35
+     { 0b0010000101000001, 4, 5, 1, 3, 2 }, // CDIWR - #36
+     { 0b1010000101000001, 4, 5, 1, 3, 2 }, // CdIWR - #37
+     { 0b0010010000100001, 4, 1, 3, 5, 2 }, // RDCWI - #38
+     { 0b1010010000100001, 4, 1, 3, 5, 2 }, // RdCWI - #39
+     { 0b0010001000100010, 3, 1, 4, 5, 2 }, // RDWCI - #40
+     { 0b1010001000100010, 3, 1, 4, 5, 2 }, // RdWCI - #41
+     { 0b0010000001100010, 3, 4, 1, 5, 2 }, // CDWRI - #42
+     { 0b1010000001100010, 3, 4, 1, 5, 2 }, // CdWRI - #43
+     { 0b0001001010001101, 5, 2, 4, 1, 3 }, // IRDCW - #44
+     { 0b1001001010001101, 5, 2, 4, 1, 3 }, // IRdCW - #45
+     { 0b0001101010001001, 4, 2, 5, 1, 3 }, // IRDWC - #46
+     { 0b1001101010001001, 4, 2, 5, 1, 3 }, // IRdWC - #47
+     { 0b0001101001001000, 2, 4, 5, 1, 3 }, // IWDRC - #48
+     { 0b1001101001001000, 2, 4, 5, 1, 3 }, // IWdRC - #49
+     { 0b0001001101001000, 2, 5, 4, 1, 3 }, // IWDCR - #50
+     { 0b1001001101001000, 2, 5, 4, 1, 3 }, // IWdCR - #51
+     { 0b0001001000011101, 5, 1, 4, 2, 3 }, // RIDCW - #52
+     { 0b1001001000011101, 5, 1, 4, 2, 3 }, // RIdCW - #53
+     { 0b0001101000011001, 4, 1, 5, 2, 3 }, // RIDWC - #54
+     { 0b1001101000011001, 4, 1, 5, 2, 3 }, // RIdWC - #55
+     { 0b0001000001011101, 5, 4, 1, 2, 3 }, // CIDRW - #56
+     { 0b1001000001011101, 5, 4, 1, 2, 3 }, // CIdRW - #57
+     { 0b0001000101011001, 4, 5, 1, 2, 3 }, // CIDWR - #58
+     { 0b1001000101011001, 4, 5, 1, 2, 3 }, // CIdWR - #59
+     { 0b0001001000100000, 2, 1, 4, 5, 3 }, // RWDCI - #60
+     { 0b1001001000100000, 2, 1, 4, 5, 3 }, // RWdCI - #61
+     { 0b0001000010100001, 4, 2, 1, 5, 3 }, // CRDWI - #62
+     { 0b1001000010100001, 4, 2, 1, 5, 3 }, // CRdWI - #63
+     { 0b0001000001100000, 2, 4, 1, 5, 3 }, // CWDRI - #64
+     { 0b1001000001100000, 2, 4, 1, 5, 3 }, // CWdRI - #65
+     { 0b0101010010001101, 5, 2, 3, 1, 4 }, // IRCDW - #66
+     { 0b1101010010001101, 5, 2, 3, 1, 4 }, // IRCdW - #67
+     { 0b0101101010001010, 3, 2, 5, 1, 4 }, // IRWDC - #68
+     { 0b1101101010001010, 3, 2, 5, 1, 4 }, // IRWdC - #69
+     { 0b0101010101001000, 2, 5, 3, 1, 4 }, // IWCDR - #70
+     { 0b1101010101001000, 2, 5, 3, 1, 4 }, // IWCdR - #71
+     { 0b0101010000011101, 5, 1, 3, 2, 4 }, // RICDW - #72
+     { 0b1101010000011101, 5, 1, 3, 2, 4 }, // RICdW - #73
+     { 0b0101101000011010, 3, 1, 5, 2, 4 }, // RIWDC - #74
+     { 0b1101101000011010, 3, 1, 5, 2, 4 }, // RIWdC - #75
+     { 0b0101000101011010, 3, 5, 1, 2, 4 }, // CIWDR - #76
+     { 0b1101000101011010, 3, 5, 1, 2, 4 }, // CIWdR - #77
+     { 0b0101101000000000, 2, 1, 5, 3, 4 }, // RWIDC - #78
+     { 0b1101101000000000, 2, 1, 5, 3, 4 }, // RWIdC - #79
+     { 0b0101000010000101, 5, 2, 1, 3, 4 }, // CRIDW - #80
+     { 0b1101000010000101, 5, 2, 1, 3, 4 }, // CRIdW - #81
+     { 0b0101000101000000, 2, 5, 1, 3, 4 }, // CWIDR - #82
+     { 0b1101000101000000, 2, 5, 1, 3, 4 }, // CWIdR - #83
+     { 0b0101010000100000, 2, 1, 3, 5, 4 }, // RWCDI - #84
+     { 0b1101010000100000, 2, 1, 3, 5, 4 }, // RWCdI - #85
+     { 0b0101000010100010, 3, 2, 1, 5, 4 }, // CRWDI - #86
+     { 0b1101000010100010, 3, 2, 1, 5, 4 }, // CRWdI - #87
+};

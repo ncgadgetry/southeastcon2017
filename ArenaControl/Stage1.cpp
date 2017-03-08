@@ -48,7 +48,7 @@ void Stage1::start()
     * Choose a relayTable index to control the placement of components 
     */
    relayIndex   = random(RELAY_TABLE_LENGTH);
-   relayPattern = relayTable[relayIndex];
+   relayPattern = relayTable[relayIndex][0];
 }
 
 
@@ -111,7 +111,7 @@ int Stage1::score(void)
  */
 uint16_t Stage1::pattern() 
 {
-   return relayTable[relayIndex];
+   return relayTable[relayIndex][0];
 }
 
 

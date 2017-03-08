@@ -19,10 +19,8 @@
  *
  * KNOWN ISSUES:
  *   + stage 3 software not yet completed
- *   + reset stage 2 start period to 5 seconds (now 1 second)
- *   + reset match end time to 5 minutes (now 1 minute)
  *
- * I encourage everone to read through the code and help me identify any
+ * I encourage everyone to read through the code and help me identify any
  *    issues. This will make the arena electronics better for both me,
  *    your team, and all the other teams.
  * Anyone who identifies any issues now (before it is complete) will have 
@@ -49,6 +47,6 @@
 /* Number of seconds in countdown before start of competition */
 #define COUNTDOWN_TIME   3
 
-/* Length of match runtime - should be 4 minutes, but using 1 minute for debugging */
-#define MATCH_RUNTIME    ((1L*60L+COUNTDOWN_TIME)*MSECS)
+/* Length of match runtime 4 minutes, plus allow the countdown time */
+#define MATCH_RUNTIME    ((4L*60L+COUNTDOWN_TIME)*MSECS)
 
