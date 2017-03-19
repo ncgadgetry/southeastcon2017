@@ -40,7 +40,7 @@ Stage1::Stage1()
 
 void Stage1::start() 
 {
-   /* Since we don't have enough I/Os on the Arduino UNO to control
+  /* Since we don't have enough I/Os on the Arduino UNO to control
     *    the 16 relays, we use an I2C port expander. An alternative
     *    idea would have been to use a larger Arduino, but this 
     *    solution was a little cheaper and did not require routing
@@ -48,7 +48,7 @@ void Stage1::start()
     * Choose a relayTable index to control the placement of components 
     */
    relayIndex   = random(RELAY_TABLE_LENGTH);
-   relayPattern = relayTable[relayIndex][0];
+//   relayPattern = relayTable[relayIndex][0];
 }
 
 
