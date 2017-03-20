@@ -33,7 +33,7 @@ void Controller::start()
 
   // If not, start the competition immediately
   if (false == lcdAttached) {
-     Serial.println("LCD controller not found, starting competition immediately\n");
+     Serial.println(F("LCD controller not found, starting competition immediately\n"));
      return;
   }
    
@@ -183,7 +183,7 @@ int Controller::buttons()
 Sainsmart_I2CLCD *Controller::lcdp() 
 {
    if (false == lcdAttached) {
-      Serial.println("ERROR: LCD NOT ATTACHED");
+      Serial.println(F("ERROR: LCD NOT ATTACHED"));
    }
    
    return &lcd;

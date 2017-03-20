@@ -52,10 +52,10 @@ void Stage1::start()
    relayPattern = pgm_read_word_near((relayTable[relayIndex]) + 0);
    turnPattern  = pgm_read_word_near((relayTable[relayIndex]) + 1);
    
-   // Serial.print("size="); Serial.println(sizeof(relayTable));
-   // Serial.print("index="); Serial.println(relayIndex);
-   // Serial.print("pattern="); Serial.println(relayPattern);
-   // Serial.print("turns="); Serial.println(turnPattern);
+   // Serial.print(F("size=")); Serial.println(sizeof(relayTable));
+   // Serial.print(F("index=")); Serial.println(relayIndex);
+   // Serial.print(F("pattern=")); Serial.println(relayPattern);
+   // Serial.print(F("turns=")); Serial.println(turnPattern);
 }
 
 
@@ -85,13 +85,13 @@ void Stage1::step(uint32_t timestamp)
  */
 void Stage1::report(void) 
 {
-   Serial.print("------ Stage 1 report ------\n");
-   Serial.print("RELAY INDEX: ");
+   Serial.print(F("------ Stage 1 report ------\n"));
+   Serial.print(F("RELAY INDEX: "));
    Serial.print(relayIndex);
-   Serial.print("\nRELAY PATTERN: ");
+   Serial.print(F("\nRELAY PATTERN: "));
    Serial.print(String(relayTable[relayIndex][0], 16));
-   Serial.print("\nSTAGE SCORE: N/A");
-   Serial.print("\n\n"); 
+   Serial.print(F("\nSTAGE SCORE: N/A"));
+   Serial.print(F("\n\n")); 
    
    if (controller.attached()) {
       controller.lcdp()->setCursor(0,1);

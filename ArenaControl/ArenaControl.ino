@@ -86,7 +86,7 @@ void setup()
    Serial.begin(9600);
    Wire.begin();
 
-   Serial.print("FreeSram = ");
+   Serial.print(F("FreeSram = "));
    Serial.println(getFreeSram());
    
    // Randomize the random number generator by reading the A1 voltage
@@ -132,12 +132,12 @@ void loop()
  
       // Add up and print the total score (not counting stage 4, which is manual)     
       score = stage1.score() + stage2.score() + stage3.score();
-      Serial.print("------ RESULTS ------\n");
-      Serial.print("FINAL SCORE: ");
+      Serial.print(F("------ RESULTS ------\n"));
+      Serial.print(F("FINAL SCORE: "));
       Serial.print(score);
-      Serial.print("\nRANDOM SEED: ");
+      Serial.print(F("\nRANDOM SEED: "));
       Serial.print(randomSeedValue);      
-      Serial.print("\n\n");
+      Serial.print(F("\n\n"));
       
       // Print out more detail on each stage
       controller.report(now, score);

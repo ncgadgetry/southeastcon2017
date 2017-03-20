@@ -343,14 +343,14 @@ void Stage2::step(uint32_t timestamp)
  *    the lightsaber, and log record of good and bad hits
  */
 void Stage2::report(void) {
-   Serial.print("------ Stage 2 report ------\n");
-   Serial.print("SABER INDEX: ");
+   Serial.print(F("------ Stage 2 report ------\n"));
+   Serial.print(F("SABER INDEX: "));
    Serial.print(patternIndex);
-   Serial.print("\nHIT REPORT : [");
+   Serial.print(F("\nHIT REPORT : ["));
    Serial.print(hitReport);
-   Serial.print("]\nSTAGE SCORE: ");
+   Serial.print(F("]\nSTAGE SCORE: "));
    Serial.print(score());
-   Serial.print("\n\n");   
+   Serial.print(F("\n\n"));   
    
    if (controller.attached()) {
       controller.lcdp()->setCursor(0,2);

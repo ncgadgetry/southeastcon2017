@@ -104,11 +104,11 @@ void Stage3::step(uint32_t timestamp)
    }
    
    if (!blinkEnabled) {
-      Serial.print("encoder=");
+      Serial.print(F("encoder="));
       Serial.print(encoderValue);
-      Serial.print(", turns=");
+      Serial.print(F(", turns="));
       Serial.print(turns);
-      Serial.print(", direction=");
+      Serial.print(F(", direction="));
       Serial.println(direction);
    }
    
@@ -128,10 +128,10 @@ void Stage3::step(uint32_t timestamp)
 
 void Stage3::report(void) 
 {
-  Serial.print("------ Stage 3 report ------\n");
-  Serial.print("STAGE SCORE: ");
+  Serial.print(F("------ Stage 3 report ------\n"));
+  Serial.print(F("STAGE SCORE: "));
   Serial.print(score());
-  Serial.print("\n\n");   
+  Serial.print(F("\n\n"));   
  
    if (controller.attached()) {
       controller.lcdp()->setCursor(0,3);
@@ -175,8 +175,8 @@ boolean movementDetected(int *turns, int *movement)
      offset = TICKS_PER_REVOLUTION - ((-saveEncoderValue) % TICKS_PER_REVOLUTION);
   }
   
-  Serial.print("*turns="); Serial.print(*turns);
-  Serial.print(", offset="); Serial.println(offset);
+  Serial.print(F("*turns=")); Serial.print(*turns);
+  Serial.print(F(", offset=")); Serial.println(offset);
   
   /* convert the position to either center CENTER_WHITE, or left/right of center */
   if ((offset < PLUS_MINUS) || (offset > (TICKS_PER_REVOLUTION-PLUS_MINUS))) {
