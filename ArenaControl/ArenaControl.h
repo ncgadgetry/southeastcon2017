@@ -39,6 +39,7 @@
  *
  * Pete Soper - SDevCS, LLC
  * Koty Turner - University of Alabama robotics team
+ * Fiona Popp - University of NC Asheville robotics team
  */
 
 /* Number of milliseconds in a second */

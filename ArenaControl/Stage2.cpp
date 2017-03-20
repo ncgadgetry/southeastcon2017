@@ -62,6 +62,7 @@ uint32_t flashOffTimestamp  = 0;
 uint8_t  *patternPtr = NULL;
 uint8_t  patternIndex = 0;
 uint32_t hitTimeout = 0;
+int      enableField = false;
 char     hitReport[10], *hitReportPtr = hitReport;
 
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NEOPIXEL_LED_COUNT, NEOPIXEL_PIN, NEO_GRB+NEO_KHZ800);
@@ -293,6 +294,7 @@ void Stage2::step(uint32_t timestamp)
           }
           if ((millis()-nextStateTimestamp) > (*patternPtr * ONE_SECOND)) {
              nextState = FIELD_ON;
+             enableField = true;
              nextStateTimestamp = millis();
              hitReportPtr++;
           }
@@ -305,7 +307,10 @@ void Stage2::step(uint32_t timestamp)
        * Next state: FIELD_OFF, unless this is the last on, then STOPPED
        */ 
       case FIELD_ON:
-          activateField(true);
+          if (enableField) {
+             activateField(true);
+             enableField = false;
+          }
           if (hit_detected()) {
              *hitReportPtr = '+';
              singleColor(blue);
@@ -317,7 +322,7 @@ void Stage2::step(uint32_t timestamp)
              nextState = (0 == *patternPtr) ? STOPPED : FIELD_OFF_NEUTRAL;
              nextStateTimestamp = millis();
              hitReportPtr++;
-          }
+          }          
           break;
       
       /* The 30 second lightsaber duel timer is up and stage 2 is disabled. 
@@ -343,14 +348,14 @@ void Stage2::step(uint32_t timestamp)
  *    the lightsaber, and log record of good and bad hits
  */
 void Stage2::report(void) {
-   Serial.print(F("------ Stage 2 report ------\n"));
-   Serial.print(F("SABER INDEX: "));
+   Serial.print("------ Stage 2 report ------\n");
+   Serial.print("SABER INDEX: ");
    Serial.print(patternIndex);
-   Serial.print(F("\nHIT REPORT : ["));
+   Serial.print("\nHIT REPORT : [");
    Serial.print(hitReport);
-   Serial.print(F("]\nSTAGE SCORE: "));
+   Serial.print("]\nSTAGE SCORE: ");
    Serial.print(score());
-   Serial.print(F("\n\n"));   
+   Serial.print("\n\n");   
    
    if (controller.attached()) {
       controller.lcdp()->setCursor(0,2);
