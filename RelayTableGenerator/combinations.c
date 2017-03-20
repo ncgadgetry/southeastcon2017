@@ -26,9 +26,6 @@
  *      can connect to pads 2, 3, 4, 5
  */
 
-// Set to 1 to generate B01...1 numbers, or 0 to generate 0b01....1 numbers
-#define GENERATE_ARDUINO_B16_FORMAT  0
-
 // Number of valid combinations found
 int count = 0;
 
@@ -47,6 +44,10 @@ int count = 0;
  * Table of 3-relay tree bit patterns for a specific component. 
  *    Each table has four entries for the 4 valid combinations
  *    of the 3x relays (8x possible patterns, but only 4x valid)
+ * Note that the bits below are 1-based to match the relays also 
+ *    being one based. The bit print routine drops the LSB bit
+ *    when printing, so the bits are then converted to 0-based
+ *    as needed for the control to the I2C board. 
  */
 int w_bit_patterns[] = BIT_PATTERN_GENERATOR( 1, 2, 3);
 int i_bit_patterns[] = BIT_PATTERN_GENERATOR( 4, 5, 6);
@@ -89,12 +90,12 @@ int valid_combination(int d, int i, int r, int c, int w)
     // Also invalid if any are connecting to the same pad
     // Simplest test - only ignore comparisons to self, even
     //   though I still compare redundant X==Y and Y==X
-    //   D       I       R       C       W
-    if (        d==r || d==c || d==c || d==w ||    // D
-        i==d         || i==r || i==c || i==w ||    // I
-        r==d || r==i         || r==c || r==w ||    // R
-        c==d || c==i || c==r         || c==w ||    // C
-        w==d || w==r || w==c || w==c)              // W
+    //   D       I       C       R       W
+    if (        d==i || d==c || d==r || d==w ||    // D
+        i==d         || i==c || i==r || i==w ||    // I
+        c==d || c==i         || c==r || c==w ||    // C
+        r==d || r==i || r==c         || r==w ||    // R
+        w==d || w==i || w==c || w==r)              // W
        return 0;
 
     // can reach, and no duplicates, so must be valid
@@ -106,20 +107,14 @@ int valid_combination(int d, int i, int r, int c, int w)
  *    to generate our own.  Admittedly these numbers could be printed
  *    in hex, but it is easier to visually see which relays should
  *    be energized in a binary format.
- * The Arduino binary number format begins with a capital B, while
- *    standard GCC format is 0b
  */
 char *B16_format(int n) {
    static char buffer[32];
    char *cptr = buffer;
    int i;
 
-#if GENERATE_ARDUINO_B16_FORMAT
-   *cptr++ = 'B';
-#else
    *cptr++ = '0';
    *cptr++ = 'b';
-#endif
 
    for (i=0; i < 16; i++)
       *cptr++ = (n & BIT(16-i)) ? '1' : '0';
@@ -137,16 +132,16 @@ char *B16_format(int n) {
  */
 void print_combination(int d, int i, int r, int c, int w)
 {
-    char buffer[5+1];
+    char buffer[5+1], code[5+1];
     int  bit_pattern;
 
     // human readable version of the pattern
-    buffer[5] = '\0';
-    buffer[d] = 'D';
-    buffer[i] = 'I';
-    buffer[r] = 'R';
-    buffer[c] = 'C';
-    buffer[w] = 'W';
+    buffer[5] = '\0';   code[5] = '\0';
+    buffer[d] = 'D';    code[d] = '5';
+    buffer[i] = 'I';    code[i] = '4';
+    buffer[c] = 'C';    code[c] = '3';
+    buffer[r] = 'R';    code[r] = '2';
+    buffer[w] = 'W';    code[w] = '1';
 
     // relay bit pattern (16-bit value actually sent to relay board)
     bit_pattern = d_bit_patterns[d_valid[d]] |
@@ -155,21 +150,18 @@ void print_combination(int d, int i, int r, int c, int w)
                   r_bit_patterns[r_valid[r]] |
                   w_bit_patterns[w_valid[w]];
 
-    // Flip the bits as 0 energizes the relay (negative logic)
-    bit_pattern ^= (1^17 - 1);
-
     // Print out the 'D' bits pattern - add +1 for each turn as
     //    pads are zero-based, but turn count is one-based
-    printf("     { %s, %d, %d, %d, %d, %d }, // %s - #%d\n", 
-            B16_format(bit_pattern), w+1, r+1, c+1, i+1, d+1, buffer, count);
+    printf("     { %s, %s }, // %s - #%d\n", 
+            B16_format(bit_pattern), code, buffer, count);
     count++;
 
 
     // Now bit flip the D_d_relay to select the 'd' bits pattern
     buffer[d] = 'd';
     bit_pattern ^= BIT(D_d_relay);
-    printf("     { %s, %d, %d, %d, %d, %d }, // %s - #%d\n", 
-            B16_format(bit_pattern), w+1, r+1, c+1, i+1, d+1, buffer, count);
+    printf("     { %s, %s }, // %s - #%d\n", 
+            B16_format(bit_pattern), code, buffer, count);
     count++;
 }
 
@@ -182,11 +174,10 @@ void print_header() {
    printf(" *    by the number of turns required at stage 3\n");
    printf(" *\n");
    printf(" * The table contains the bit patterns for the relay (active\n");
-   printf(" *    low), and the number of turns for the quadrature for each\n");
-   printf(" *    component (in wire, resistor, capacitor, inductor,\n");
-   printf(" *    and diode order). The comments for each entry contain\n");
-   printf(" *    what component is at each pad, followed by the\n");
-   printf(" *    sequential combination number.\n");
+   printf(" *    low), and the number of turns for the pad. The number of\n");
+   printf(" *    turns is encoded in a 5-digit integer, with LSB the number\n");
+   printf(" *    of turns for pad 0, and MSB being the number of turns for\n");
+   printf(" *    pad 5.\n");
    printf(" * This does not allow all possible combinations), but is a reasonable\n");
    printf(" *    enough size tree of values (88 combinations) that it is not \n");
    printf(" *    possible to guess), and uses only 16 relays (as compared to 25 \n");
@@ -197,9 +188,8 @@ void print_header() {
 
    printf("#define RELAY_TABLE_LENGTH (sizeof(relayTable) / sizeof(relayTable[0]))\n");
    printf("\n");
-   printf("uint16_t relayTable[][6] = {\n\n");
-   printf("//     Bit pattern         __num turns__       pad\n");
-   printf("//     for relays          W  R  C  I  D       parts   ID\n\n");
+   printf("const uint16_t relayTable[][6] = {\n\n");
+   printf("//     Relay bit pattern   turns       pad     ID\n");
 }
 
 void print_trailer() {

@@ -21,6 +21,8 @@
 #include <Wire.h>
 
 #include "Arduino.h"
+#include <avr/pgmspace.h>
+
 #include "Stage1.h"
 #include "relayTable.h"
 
@@ -28,8 +30,7 @@
 extern Controller controller;
 
 #define I2C_ADDR_RELAY   0x20
-uint16_t relayIndex = 0;
-uint16_t relayPattern = 0;
+
 void setRelays(uint16_t relayPattern);
 
 
@@ -48,7 +49,13 @@ void Stage1::start()
     * Choose a relayTable index to control the placement of components 
     */
    relayIndex   = random(RELAY_TABLE_LENGTH);
-//   relayPattern = relayTable[relayIndex][0];
+   relayPattern = pgm_read_word_near((relayTable[relayIndex]) + 0);
+   turnPattern  = pgm_read_word_near((relayTable[relayIndex]) + 1);
+   
+   // Serial.print("size="); Serial.println(sizeof(relayTable));
+   // Serial.print("index="); Serial.println(relayIndex);
+   // Serial.print("pattern="); Serial.println(relayPattern);
+   // Serial.print("turns="); Serial.println(turnPattern);
 }
 
 
@@ -82,7 +89,7 @@ void Stage1::report(void)
    Serial.print("RELAY INDEX: ");
    Serial.print(relayIndex);
    Serial.print("\nRELAY PATTERN: ");
-   Serial.print(String(relayPattern, 16));
+   Serial.print(String(relayTable[relayIndex][0], 16));
    Serial.print("\nSTAGE SCORE: N/A");
    Serial.print("\n\n"); 
    
@@ -106,25 +113,16 @@ int Stage1::score(void)
 }
 
 
-/* Returns the relaypattern - this is needed by stage 3 to determine if the
- *    number of turns is correct for the stage 1 component pattern
- */
-uint16_t Stage1::pattern() 
-{
-   return relayTable[relayIndex][0];
-}
-
-
 /* Set the 16 relays to the state in the 16-bit relay parameter. The relays
  *    are attached to the Arduino via an I2C 16-bit port expander.
  * This code can still run without the I2C port expander attached - the
  *    write commands fail. This will allow testing of the code without a
  *    full setup, and the components can be hard-wired to the desired pads.
  */
-void setRelays(uint16_t relayPattern)
+void setRelays(uint16_t value)
 {  
    Wire.beginTransmission(I2C_ADDR_RELAY);
-   Wire.write(~(relayPattern & 0xFF));
-   Wire.write(~((relayPattern >> 8) & 0xFF));
+   Wire.write(~(value & 0xFF));
+   Wire.write(~((value >> 8) & 0xFF));
    Wire.endTransmission();
 }
