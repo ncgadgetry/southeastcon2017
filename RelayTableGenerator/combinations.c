@@ -158,13 +158,6 @@ void print_combination(int w, int r, int c, int i, int d)
                   c_bit_patterns[c_pad_map[c_valid[c]]] |
                   i_bit_patterns[i_pad_map[i_valid[i]]] |
                   d_bit_patterns[d_pad_map[d_valid[d]]];
-#if 0
-    bit_pattern = w_bit_patterns[w_valid[w]] |
-                  r_bit_patterns[r_valid[r]] |
-                  c_bit_patterns[c_valid[c]] |
-                  i_bit_patterns[i_valid[i]] |
-                  d_bit_patterns[d_valid[d]];
-#endif
 
     // Print out the 'D' bits pattern - add +1 for each turn as
     //    pads are zero-based, but turn count is one-based

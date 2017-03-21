@@ -11,6 +11,10 @@
 #include "Arduino.h"
 #include "Stage3.h"
 
+#include "SimplePinChange.h"
+
+#include "Stage1.h"
+extern Stage1 stage1;
 #include "Controller.h"
 extern Controller controller;
 
@@ -36,7 +40,6 @@ int blinkEnabled = true;
 int digits[10] = { 0 };
 int digitCounter = 0;
 
-
 boolean movementDetected(int *encoder);
 void blinkQuadratureLEDs(void);
 void updateEncoder(void);
@@ -48,12 +51,21 @@ Stage3::Stage3()
 
 void Stage3::start() 
 {
+  uint16_t turnPattern;
+  
   /* Set both quadrature channels to input and turn on pullup resistors */
-  pinMode(ENCODER_A_PIN, INPUT); 
-  pinMode(ENCODER_B_PIN, INPUT);
-  digitalWrite(ENCODER_A_PIN, HIGH);
-  digitalWrite(ENCODER_B_PIN, HIGH);
+  pinMode(ENCODER_A_PIN, INPUT_PULLUP); 
+  pinMode(ENCODER_B_PIN, INPUT_PULLUP);
 
+  /* Get the initial state of the two quadrature pins */
+  oldState = 0;
+  if (digitalRead(ENCODER_A_PIN)) oldState |= 1;
+  if (digitalRead(ENCODER_B_PIN)) oldState |= 2;
+
+  /* invoke interrupt routine on each edge of ENCODER_A_PIN */
+  SimplePinChange.attach(ENCODER_A_PIN, updateEncoder);
+  SimplePinChange.attach(ENCODER_B_PIN, updateEncoder);  
+  
   /* Setup the quadrature encoder pin modes */
   pinMode(ENABLE_LED_PIN, OUTPUT);
   pinMode(RED_LED_PIN,    OUTPUT);
@@ -64,19 +76,37 @@ void Stage3::start()
   MsTimer2::set(100, blinkQuadratureLEDs);
   MsTimer2::start();
 
-  /* Get the initial state of the two quadrature pins */
-  oldState = 0;
-  if (digitalRead(ENCODER_A_PIN)) oldState |= 1;
-  if (digitalRead(ENCODER_B_PIN)) oldState |= 2;
-
-  /* invoke interrupt routine on each edge of ENCODER_A_PIN */
-  attachInterrupt(1, updateEncoder, CHANGE);
-
   /* Initial state of the LEDs is blinking white */
   digitalWrite(RED_LED_PIN,    LOW);
   digitalWrite(GREEN_LED_PIN,  LOW);
   digitalWrite(BLUE_LED_PIN,   LOW);
   digitalWrite(ENABLE_LED_PIN, HIGH);
+
+  turnPattern = stage1.turnPattern;
+  Serial.print("pattern=");
+  Serial.println(turnPattern);
+
+#if 0  
+  int loop;
+  int wrongGoals[5];
+  int correctGoals[5];
+  
+  int plusOrMinus = +1;
+  int previousGoal = 8;
+  for (loop=0; loop < 5; loop++) {
+     wrongGoals[4-loop] = previousGoal - 12;
+     previousGoal = correctGoals[4-loop] = ((turnPattern % 10) * 96 - 8) * plusOrMinus;
+     turnPattern /= 10;
+     plusOrMinus *= -1;
+  }
+  
+  for (loop=0; loop < 5; loop++) {
+     Serial.print(wrongGoals[loop]);
+     Serial.print(" ... ");
+     Serial.println(correctGoals[loop]);
+  }
+  Serial.println("");
+#endif  
 }
 
 

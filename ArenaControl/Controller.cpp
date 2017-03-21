@@ -40,8 +40,7 @@ void Controller::start()
   // Else we will use the LCD and buttons, so initialize the buttons as digital input
   int b;
   for (b=A0; b <= A3; b++) {  
-     pinMode(b, INPUT);
-     digitalWrite(b, HIGH);
+     pinMode(b, INPUT_PULLUP);
   }
 
   // Initialize the display and print the splash screen  
