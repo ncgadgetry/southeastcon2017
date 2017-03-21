@@ -204,7 +204,7 @@ void print_header() {
 
    printf("#define RELAY_TABLE_LENGTH (sizeof(relayTable) / sizeof(relayTable[0]))\n");
    printf("\n");
-   printf("const uint16_t relayTable[][6] = {\n\n");
+   printf("const uint16_t relayTable[][2] PROGMEM = {\n\n");
    printf("//     Relay bit pattern   turns       pad\n");
    printf("//     __d_W__R__C__I__D_  12345       12345   ID\n");
 

@@ -19,7 +19,7 @@
 
 #define RELAY_TABLE_LENGTH (sizeof(relayTable) / sizeof(relayTable[0]))
 
-const uint16_t relayTable[][6] = {
+const uint16_t relayTable[][2] PROGMEM = {
 
 //     Relay bit pattern   turns       pad
 //     __d_W__R__C__I__D_  12345       12345   ID
