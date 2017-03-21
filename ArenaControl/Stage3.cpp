@@ -23,7 +23,7 @@ extern Controller controller;
 #define BLUE_LED_PIN     10
 
 #define TICKS_PER_REVOLUTION  96
-#define PLUS_MINUS             5
+#define PLUS_MINUS             6
 
 #define CENTER_WHITE  0x0
 #define RIGHT_RED     0x1
@@ -37,7 +37,7 @@ int digits[10] = { 0 };
 int digitCounter = 0;
 
 
-boolean movementDetected(int *movement, int *turns);
+boolean movementDetected(int *encoder);
 void blinkQuadratureLEDs(void);
 void updateEncoder(void);
 
@@ -97,31 +97,20 @@ void Stage3::stop(uint32_t timestamp)
 
 void Stage3::step(uint32_t timestamp) 
 {
-   int turns, direction;
-  
-   if (!movementDetected(&turns, &direction)) {
+   int encoder;
+
+   /* Check if motion was detected, and control the quadrature red/white/blue
+    *    LEDs. and to return the current encoder value.  We can't use a 'live'
+    *    encoder value below as we could have a race condition if the encoder
+    *    changed while in the code below
+    */
+   if (!movementDetected(&encoder)) {
       return;
    }
-   
+
    if (!blinkEnabled) {
       Serial.print(F("encoder="));
-      Serial.print(encoderValue);
-      Serial.print(F(", turns="));
-      Serial.print(turns);
-      Serial.print(F(", direction="));
-      Serial.println(direction);
-   }
-   
-   digitalWrite(RED_LED_PIN,   !(LEFT_BLUE != direction));
-   digitalWrite(BLUE_LED_PIN,  !(RIGHT_RED != direction));
-   digitalWrite(GREEN_LED_PIN, !(CENTER_WHITE == direction));
-
-   if ((CENTER_WHITE != direction) && (blinkEnabled)) {
-      blinkEnabled = false;
-   }
-
-   if ((CENTER_WHITE == direction) && (digits[digitCounter] != turns)) {
-      digits[digitCounter] = turns;
+      Serial.println(encoder);
    }
 }
 
@@ -152,73 +141,97 @@ int Stage3::score(void)
 uint32_t movementHistory = 0;
 long prevEncoderValue = 0;
 
-#define MOVEMENT_HISTORY_SIZE  7
-#define MOVEMENT_MASK          0x3
+#define MOVEMENT_HISTORY_SIZE  4
+#define MOVEMENT_MASK_WIDTH    2
+#define MOVEMENT_HISTORY_MASK  ((1 << MOVEMENT_MASK_WIDTH) - 1)
 
-boolean movementDetected(int *turns, int *movement) 
+boolean movementDetected(int *encoder) 
 {
-  int offset;
-  int saveEncoderValue;
-  int loop; 
+   int curMovement;
+   int loop; 
+   int curDirection;
+   int rightMotion  = 0;
+   int leftMotion   = 0;
      
-  /* If no motion, then return with nothing else to do */
-  saveEncoderValue = encoderValue;
-  if (prevEncoderValue == saveEncoderValue) {
-     return false;
-  }
+   /* If no motion, then return with nothing else to do */
+   *encoder = encoderValue;
+   if (prevEncoderValue == *encoder) {
+       return false;
+    }
 
-  if (saveEncoderValue >= 0) {
-     *turns = (saveEncoderValue + PLUS_MINUS) / TICKS_PER_REVOLUTION;
-     offset = saveEncoderValue % TICKS_PER_REVOLUTION;
-  } else {
-     *turns = -((PLUS_MINUS - saveEncoderValue) / TICKS_PER_REVOLUTION);
-     offset = TICKS_PER_REVOLUTION - ((-saveEncoderValue) % TICKS_PER_REVOLUTION);
-  }
-  
-  Serial.print(F("*turns=")); Serial.print(*turns);
-  Serial.print(F(", offset=")); Serial.println(offset);
-  
-  /* convert the position to either center CENTER_WHITE, or left/right of center */
-  if ((offset < PLUS_MINUS) || (offset > (TICKS_PER_REVOLUTION-PLUS_MINUS))) {
-     *movement = CENTER_WHITE;
-  } else if (prevEncoderValue < encoderValue) {
-     *movement = RIGHT_RED;
-  } else {
-     *movement = LEFT_BLUE;
-  } 
+   /* if we are within the plus/minus of center, set the quadrature LEDs to
+      white and wipe out all past history. This is needed as if we are moving
+      right to white, then reverse to left, we have more right motion than
+      left and can temporarily light the LEDs the wrong color
+   */
+   if (abs(curMovement - *encoder) <= PLUS_MINUS) {
+      curDirection = CENTER_WHITE;
+      movementHistory = 0;
+   
+   /* Else if not int the center, we keep a running history of the last 'N'
+      movement directions to average out small +/- movements setting the color
+    */   
+   } else {
+     
+      /* convert the current position to either center, or left/right of center */
+      if (prevEncoderValue < *encoder) {
+         curDirection = RIGHT_RED;
+      } else {
+         curDirection = LEFT_BLUE;
+      } 
  
-  /* if not center CENTER_WHITE, filter motion to avoid quick red/blue changes */
-  if (CENTER_WHITE != *movement) {
-     int rightMotion = 0;
-     int leftMotion  = 0;
-
-     /* movement history contains the history of last 'n' movements */
-     movementHistory <<= 2;
-     movementHistory |= *movement;
-     movementHistory &= ((1 << (2*MOVEMENT_HISTORY_SIZE)) - 1);
+      /* movement history contains the history of last 'n' movements */
+      movementHistory <<= MOVEMENT_MASK_WIDTH;
+      movementHistory |= curDirection;
+      movementHistory &= ((1 << (MOVEMENT_MASK_WIDTH*MOVEMENT_HISTORY_SIZE)) - 1);
      
-     /* count the left and right movements to determine the major move position */
-     uint32_t history = movementHistory; 
+      /* count the left and right movements to determine the major move direction */
+      uint32_t history = movementHistory; 
      
-     for (loop=0; loop < MOVEMENT_HISTORY_SIZE; loop++) {
-        if ((history & MOVEMENT_MASK) == RIGHT_RED) {
-           rightMotion++;
-        } else if ((history & MOVEMENT_MASK) == LEFT_BLUE) {
-           leftMotion++;
-        }
-        history >>= 2;
-     }
+      /* count number of 1 (right) or 0 (left) bits to determine the average direction */
+      for (loop=0; loop < MOVEMENT_HISTORY_SIZE; loop++) {
+         if ((history & MOVEMENT_HISTORY_MASK) == RIGHT_RED) {
+            rightMotion++;
+         } else if ((history & MOVEMENT_HISTORY_MASK) == LEFT_BLUE) {
+            leftMotion++; 
+         }
+         history >>= MOVEMENT_MASK_WIDTH;
+      }
 
-     /* movement is the result of the left/right filter above */     
-     *movement = (rightMotion > leftMotion) ? RIGHT_RED : LEFT_BLUE;
-  }
-  
-     
-  /* update previous encoder value for the next iteration */
-  prevEncoderValue = saveEncoderValue;
+      /* if we are currently at center, light the LED white, else red or 
+       *   blue based on the motion counts above
+       */
+      if (leftMotion > rightMotion) {
+         curDirection = LEFT_BLUE;
+      } else {
+         curDirection = RIGHT_RED;
+      }
 
-  /* return true indicating we did have motion */
-  return true;
+Serial.print("history=");
+Serial.print(movementHistory);
+Serial.print(", dir=");
+Serial.println(curDirection);
+   }
+   
+   /* Tricky code to handle the 3x conditions of red, white and blue for
+    *   the quadrature encoding.  Green is only on if we are in the center
+    *   position (not on for left or right), while red is off only when
+    *   not heading left, and blue is only on when not heading right.
+    */
+   digitalWrite(GREEN_LED_PIN, !(CENTER_WHITE == curDirection));
+   digitalWrite(RED_LED_PIN,   !(LEFT_BLUE    != curDirection));
+   digitalWrite(BLUE_LED_PIN,  !(RIGHT_RED    != curDirection));
+
+   /* If we moved out of the center area, disable blinking of the LEDs */
+   if ((CENTER_WHITE != curDirection) && (blinkEnabled)) {
+      blinkEnabled = false;
+   }
+
+   /* update previous encoder value for the next iteration */
+   prevEncoderValue = *encoder;
+
+   /* return true indicating we did have motion */
+   return true;
 }  
 
 
