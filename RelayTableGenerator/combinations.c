@@ -61,30 +61,17 @@ int d_bit_patterns[] = BIT_PATTERN_GENERATOR( 0, 1, 2);
  */
 #define D_d_relay 15
 
-// Determine if the pad is reachable by this component - mapping it to
-//   the 1-origin pad number, with 0 being an invalid (unreachable) pad
-int w_valid[] = { 0, 2, 3, 4, 5 };
-int r_valid[] = { 1, 0, 3, 4, 5 };
-int c_valid[] = { 1, 2, 0, 4, 5 };
-int i_valid[] = { 1, 2, 3, 0, 5 };
-int d_valid[] = { 1, 2, 3, 4, 0 };
-
-// Arrays for mapping the five possible pad values into the four valid 
-// relay energizing patterns.
-// For instance, with w_valid it's assumed an element value of 0 will not be 
-// fetched: this is an undefined value. However, the *indexes* into this array 
-// can have values of 0-4, but there are only four valid relay patterns. The
-// indexes are implicitly the 0-4 device codes, but only four can be used
-// for energizing patterns.
-
-// So these arrays translate the *index position* in the w_valid array (that
-// is, the value of variable "w" in the code below) and provide an index
-// into w_bit_patterns that defines a valid energizing pattern. So, if
-// w = 2 (pad 3) and w_valid[2] == 3 (pad), then w_pad_map[2] == 1, which 
-// in code below selects w_bit_patterns[1] (0b010) which results in 
-// 0 010 000 000 000 000 being or'd into the relayTable relayPattern word to 
-// be generated. This leaves relays K15 and K13 off and turns on K12. That
-// connects the wire to pad 3.
+// The pad map arrays serve two purposes - first, if the value 
+// is -1, it means the pad is not accessible by this component
+// (ie: a wire, designatied with abbreviation 'w', cannot reach 
+// pad 1.  Next, if the value is not negative, it is an index 
+// into the the bit pattern arrays above.
+//
+// Example, w = 2 (pad 3), selects w_bit_patterns[1] (0b010) 
+// which results in 0 010 000 000 000 000 being or'd into the 
+// relayTable relayPattern word to be generated. This leaves 
+// relays K15 and K13 off and turns on K12. That connects the 
+// wire to pad 3.
 
 //  origin    pad:   1   2  3  4  5
 int w_pad_map[] = { -1,  0, 1, 2, 3 };
@@ -99,11 +86,11 @@ int d_pad_map[] = {  0,  1, 2, 3,-1 };
 int valid_combination(int w, int r, int c, int i, int d)
 {
     // If the relay matrix cannot reach, obviously invalid
-    if ((d_valid[d] == 0) ||
-        (i_valid[i] == 0) ||
-        (r_valid[r] == 0) ||
-        (c_valid[c] == 0) ||
-        (w_valid[w] == 0)) 
+    if ((d_pad_map[d] == -1) ||
+        (i_pad_map[i] == -1) ||
+        (r_pad_map[r] == -1) ||
+        (c_pad_map[c] == -1) ||
+        (w_pad_map[w] == -1)) 
        return 0;
 
     // Also invalid if any are connecting to the same pad
