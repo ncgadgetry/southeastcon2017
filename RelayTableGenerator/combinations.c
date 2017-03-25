@@ -86,11 +86,11 @@ int d_pad_map[] = {  0,  1, 2, 3,-1 };
 int valid_combination(int w, int r, int c, int i, int d)
 {
     // If the relay matrix cannot reach, obviously invalid
-    if ((d_pad_map[d] == -1) ||
-        (i_pad_map[i] == -1) ||
+    if ((w_pad_map[w] == -1) ||
         (r_pad_map[r] == -1) ||
         (c_pad_map[c] == -1) ||
-        (w_pad_map[w] == -1)) 
+        (i_pad_map[i] == -1) ||
+        (d_pad_map[d] == -1)) 
        return 0;
 
     // Also invalid if any are connecting to the same pad
