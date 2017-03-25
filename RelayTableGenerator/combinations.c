@@ -69,12 +69,23 @@ int c_valid[] = { 1, 2, 0, 4, 5 };
 int i_valid[] = { 1, 2, 3, 0, 5 };
 int d_valid[] = { 1, 2, 3, 4, 0 };
 
-// This is necessary to map a 0-origin pad number into a relay bit pattern for
-// each device. These element values index into the bit pattern arrays to
-// select a relay energizing sequence (000, 010, 001, 101) for the three
-// elements connecting the device to one of four pads. It's impossible to
-// use a -1 value: they only indicate the unused fifth pattern for a given
-// device.
+// Arrays for mapping the five possible pad values into the four valid 
+// relay energizing patterns.
+// For instance, with w_valid it's assumed an element value of 0 will not be 
+// fetched: this is an undefined value. However, the *indexes* into this array 
+// can have values of 0-4, but there are only four valid relay patterns. The
+// indexes are implicitly the 0-4 device codes, but only four can be used
+// for energizing patterns.
+
+// So these arrays translate the *index position* in the w_valid array (that
+// is, the value of variable "w" in the code below) and provide an index
+// into w_bit_patterns that defines a valid energizing pattern. So, if
+// w = 2 (pad 3) and w_valid[2] == 3 (pad), then w_pad_map[2] == 1, which 
+// in code below selects w_bit_patterns[1] (0b010) which results in 
+// 0 010 000 000 000 000 being or'd into the relayTable relayPattern word to 
+// be generated. This leaves relays K15 and K13 off and turns on K12. That
+// connects the wire to pad 3.
+
 //  origin    pad:   1   2  3  4  5
 int w_pad_map[] = { -1,  0, 1, 2, 3 };
 int r_pad_map[] = {  0, -1, 1, 2, 3 };
@@ -153,11 +164,11 @@ void print_combination(int w, int r, int c, int i, int d)
 
     // relay bit pattern (16-bit value actually sent to relay board)
     // relay bit pattern (16-bit value actually sent to relay board)
-    bit_pattern = w_bit_patterns[w_pad_map[w_valid[w]]] |
-                  r_bit_patterns[r_pad_map[r_valid[r]]] |
-                  c_bit_patterns[c_pad_map[c_valid[c]]] |
-                  i_bit_patterns[i_pad_map[i_valid[i]]] |
-                  d_bit_patterns[d_pad_map[d_valid[d]]];
+    bit_pattern = w_bit_patterns[w_pad_map[w]] |
+                  r_bit_patterns[r_pad_map[r]] |
+                  c_bit_patterns[c_pad_map[c]] |
+                  i_bit_patterns[i_pad_map[i]] |
+                  d_bit_patterns[d_pad_map[d]];
 
     // Print out the 'D' bits pattern - add +1 for each turn as
     //    pads are zero-based, but turn count is one-based
