@@ -70,7 +70,7 @@ int d_bit_patterns[] = BIT_PATTERN_GENERATOR( 0, 1, 2);
 // Example, w = 2 (pad 3), selects w_bit_patterns[1] (0b010) 
 // which results in 0 010 000 000 000 000 being or'd into the 
 // relayTable relayPattern word to be generated. This leaves 
-// relays K15 and K13 off and turns on K12. That connects the 
+// relays K12 and K14 off and turns on K13. That connects the 
 // wire to pad 3.
 
 //  origin    pad:   1   2  3  4  5
