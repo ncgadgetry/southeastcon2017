@@ -138,18 +138,17 @@ char *B16_format(int n) {
  */
 void print_combination(int w, int r, int c, int i, int d)
 {
-    char buffer[5+1], code[5+1];
+    char comment[5+1], code[5+1];
     int  bit_pattern;
 
     // human readable version of the pattern
-    buffer[5] = '\0';   code[5] = '\0';
-    buffer[w] = 'W';    code[w] = '1';
-    buffer[r] = 'R';    code[r] = '2';
-    buffer[c] = 'C';    code[c] = '3';
-    buffer[i] = 'I';    code[i] = '4';
-    buffer[d] = 'D';    code[d] = '5';
+    comment[w] = 'W';    code[w] = '1';   // Wire is 1 turn on stage 3
+    comment[r] = 'R';    code[r] = '2';   // Resistor is 2 turns on stage 3
+    comment[c] = 'C';    code[c] = '3';   // Capacitor is 3 turns on stage 3
+    comment[i] = 'I';    code[i] = '4';   // Inductor is 4 turns on stage 3
+    comment[d] = 'D';    code[d] = '5';   // Diode is 5 turns on stage 3
+    comment[5] = '\0';   code[5] = '\0';
 
-    // relay bit pattern (16-bit value actually sent to relay board)
     // relay bit pattern (16-bit value actually sent to relay board)
     bit_pattern = w_bit_patterns[w_pad_map[w]] |
                   r_bit_patterns[r_pad_map[r]] |
@@ -160,15 +159,15 @@ void print_combination(int w, int r, int c, int i, int d)
     // Print out the 'D' bits pattern - add +1 for each turn as
     //    pads are zero-based, but turn count is one-based
     printf("     { %s, %s }, // %s - #%d\n", 
-            B16_format(bit_pattern), code, buffer, count);
+            B16_format(bit_pattern), code, comment, count);
     count++;
 
 
     // Now bit flip the D_d_relay to select the 'd' bits pattern
-    buffer[d] = 'd';
+    comment[d] = 'd';
     bit_pattern ^= BIT(D_d_relay);
     printf("     { %s, %s }, // %s - #%d\n", 
-            B16_format(bit_pattern), code, buffer, count);
+            B16_format(bit_pattern), code, comment, count);
     count++;
 }
 
