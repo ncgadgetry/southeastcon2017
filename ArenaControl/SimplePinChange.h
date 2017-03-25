@@ -5,7 +5,7 @@
  * multiple pins per port.
  * 
  * Copyright (c) 2016 Peter James Soper pete@soper.us
- * April 27, 2016
+ * April 27, 2016 MIT license
  */
 
 #ifndef SIMPLEPINCHANGE_H
@@ -26,7 +26,12 @@ class SimplePinChangeClass {
     // the port handling this pin has already been subscribed. This is 
     // informational. There's no problem with multiple pins, but the callback
     // function has to determine which of the multiple pins changed in this 
-    // case.  An invalid pin number results in an immediate return of false
+    // case.  An invalid pin number results in an immediate return of false.
+    // Ports are assigned as follows on an Atmega328:
+    //  Pins 8-13 are in the port for PCINT0
+    //  Pins 14-21 (A0-A7) are in the port for PCINT1, but NOTE that pins 20 
+    //  and 21 (A6, A7) cannot be used for digital I/O.
+    //  Pins 0-7 are in the port for PCINT2.
     static bool attach(uint8_t pin, void (*callback)());
 
     // Remove the association of a change of the given pin with an interrupt.
