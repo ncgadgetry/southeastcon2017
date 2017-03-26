@@ -82,8 +82,6 @@ void Controller::stop(uint32_t timestamp)
 
 void Controller::step(uint32_t timestamp)
 {
-   static boolean initial = true;
-   
    if (false == lcdAttached) {
       return;
    }

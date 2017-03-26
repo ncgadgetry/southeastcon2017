@@ -35,25 +35,34 @@ extern Controller controller;
 #define RIGHT_RED     0x1
 #define LEFT_BLUE     0x2
 
-volatile long encoderValue = 0;
-int oldState = 0;
-int blink = 0;
-int blinkEnabled = true;
+static volatile long encoderValue = 0;          // updated by the encoder interrupt
+static int oldState = 0;                        // previous quadrature interrupt pin state
+static int blink = 0;                           // on/off value of blink led - updated by MsTimer2 irq
+static int blinkEnabled = true;                 // true if blink enabled (off after motion)
 
-uint16_t turnPattern = 0;
+static int prevCenter = 1;                      // were we in the center on the last time we checked?
+static int prevTurns = 0;                       // previous number of turns (at last digit entered)
+static int prevPosition = -1;                   // previous position (last time digit entered)
+static boolean enteringClockwise = 1;           // did we enter center in a clockwise direction?
+static boolean exitingClockwise = 0;            // did we exit center in a clockwise direction?
+static boolean lastDigitClockwise = true;       // was last digit entered in clockwise direction?
 
-#define MAX_DIGITS_STORED 32
-uint8_t digits[MAX_DIGITS_STORED] = { 0 };
-int digitCounter = 0;
-char digitString[10] = { '\0' };
-int stageScore = 0;
+static uint16_t turnPattern = 0;                // turns pattern as chosen by stage 1 relays
 
-void addDigit(void);
-boolean inCenter(long);
-boolean movementDetected(long *encoder, int *center);
-void blinkQuadratureLEDs(void);
-void updateEncoder(void);
-void calculateScore(void);
+static int digitCounter = 0;                    // number of digits stored
+static char digitString[10] = { '\0' };         // Printable version of the digits stored
+static int stageScore = 0;                      // Stage score
+
+#define MAX_DIGITS_STORED 32                       // Maximum number of digits (only last 5 count)
+static uint8_t digits[MAX_DIGITS_STORED] = { 0 };  // digits stored on each cw/ccw or ccw/cw transition
+
+static void addDigit(void);
+static boolean inCenter(long);
+static boolean movementDetected(long *encoder, int *center);
+static void blinkQuadratureLEDs(void);
+static void updateEncoder(void);
+static void calculateScore(void);
+
 
 Stage3::Stage3() 
 {
@@ -113,12 +122,6 @@ void Stage3::stop(uint32_t timestamp)
   calculateScore();
 }
 
-int prevCenter = 1;
-int prevTurns = 0;
-int prevPosition = -1;
-boolean enteringClockwise = 1;
-boolean exitingClockwise = 0;
-boolean lastDigitClockwise = true;
 
 void Stage3::step(uint32_t timestamp) 
 {
@@ -142,19 +145,42 @@ void Stage3::step(uint32_t timestamp)
    }
 #endif
 
-   /* Are we currently in a center region? */
-   if (center) {
+   /* General logic of the code below...
+    *  
+    *  We really only care if we are transitioning into, or out of, a center - no
+    *  other motion counts. This allows the robot to move the quadrature back and 
+    *  forth and all that motion is filtered out - until we cross a center.
+    *  
+    *  Once we cross into a center we need to store the the number of turns and
+    *  a flag indicating if we entered it clockwise or counterclockwise
+    *  
+    *  Once we exit a center, if we exit it in the same direction we entered it,
+    *  we have nothing to do (just continuing motion in the same direction). However,
+    *  if we exit it in a different direction than we entered, we are entering a
+    *  digit. The only extra issue here is to verify we are entereing digits in a
+    *  clockwise, counterclockwise sequence.
+    *  
+    *  Note that if we start off moving in a counterclockwize direction the first
+    *  time, we are lost, and the system will not recover - this is an error state
+    *  as defined in the rules (must start clockwise).
+    */
+    
+    /* Are we currently in a center region? */
+    if (center) {
       
       /* did we just transition into center on this step? */
       if (!prevCenter) {
          turns = (encoder + (ONE_REVOLUTION/2)) / ONE_REVOLUTION;
          enteringClockwise = (encoder < (turns*ONE_REVOLUTION));
+#if 1 
          Serial.print(F("Entering center @ "));
          Serial.print(encoder);
          Serial.print(F(", turns="));
          Serial.print(turns);
          Serial.print(F(", enteringClockwise="));
          Serial.println(enteringClockwise);
+#endif
+
          prevTurns = turns;
       }
 
@@ -165,10 +191,12 @@ void Stage3::step(uint32_t timestamp)
       if (prevCenter) {
 
          exitingClockwise = (encoder > (prevTurns*ONE_REVOLUTION));
+#if 1
          Serial.print(F("Exiting center @ "));
          Serial.print(encoder);
          Serial.print(F(", exitingClockwise="));
          Serial.println(exitingClockwise);
+#endif
 
          /* If we entered, then exited the center in opposite directions
           * then we have just dialed a digit
@@ -191,15 +219,95 @@ void Stage3::step(uint32_t timestamp)
          }
       }
    }  
- 
+
+   /* Save our previous center state for our next time */
    prevCenter = center;
+}
+
+
+void Stage3::report(void) 
+{
+   Serial.print(F("------ Stage 3 report ------\n"));
+   Serial.print(F("STAGE SCORE: "));
+   Serial.println(stageScore);
+   Serial.print(F("Digits entered: "));
+   Serial.println(digitString);
+   
+   if (controller.attached()) {
+      controller.lcdp()->setCursor(0,3);
+      controller.lcdp()->print("3: ");
+      controller.lcdp()->print(String(stageScore));
+      controller.lcdp()->print(" ");
+      controller.lcdp()->print(String(digitString));
+   }
+ 
+}
+
+
+int Stage3::score(void) 
+{
+  /* Already calculated by the report function */
+  return stageScore;
+}
+
+
+/* This handles the logic of adding a digit, calculating the digit value
+ *  from the current and previous positions. This was broken out of the 
+ *  rest of the code so it can be called for the last digit from the report
+ *  function
+ */
+static void addDigit(void)
+{
+#if 0
+   Serial.print(F("prevPosition="));
+   Serial.println(prevPosition);
+#endif
+
+   /* If this is the first digit, the digit is just the number of turns */
+   if (prevPosition < 0) {
+       digits[digitCounter] = prevTurns;
+
+    /* Else we need to subtract the last position to get the delta number of
+     *  turns. We have tow cases here - traveling clockwise or counterclockwise
+     */
+    } else if (enteringClockwise) {
+       digits[digitCounter] = prevTurns - prevPosition;
+    } else {
+       digits[digitCounter] = prevPosition - prevTurns;
+    }
+
+#if 1
+    Serial.print(F("Adding digit: ")); 
+    Serial.println(digits[digitCounter]);
+#endif
+
+    /* Update our global variables for the next digit */
+    lastDigitClockwise = exitingClockwise;
+    prevPosition = prevTurns;
+    digitCounter++;
+}
+
+
+static boolean inCenter(long enc) 
+{
+   int relativeEncoder;
+   
+   /* Calculate the relative value +/- from center position */
+   relativeEncoder = (int) (enc % ONE_REVOLUTION);
+   if (relativeEncoder > (ONE_REVOLUTION / 2)) {
+      relativeEncoder -= ONE_REVOLUTION;
+   }
+   
+
+   /* Center is true if we are +/- a small margin of the center */
+   return abs(relativeEncoder) <= PLUS_MINUS;   
 }
 
 
 /* Process the digits array to convert it to a printable string and 
  * calculate the stage score 
  */
-void calculateScore(void) {
+static void calculateScore(void) {
 
    int loop;
    int numDigits;
@@ -232,7 +340,8 @@ void calculateScore(void) {
       if (digitCounter < 0) {
          digitCounter += MAX_DIGITS_STORED;
       }
-      
+
+      /* Handle values outside of [0..9] so not converted to non-printable ASCII */
       if ((digits[digitCounter] >= 0) && (digits[digitCounter] <= 9)) {
          digitString[loop] = digits[digitCounter] + '0';
       } else {
@@ -248,84 +357,18 @@ void calculateScore(void) {
    /* Now loop through the digits and count how many are correct */
    pattern = turnPattern;
    for (loop=0; loop < numDigits; loop++) {
-      if (((pattern / powersOfTen[loop]) % 10) == (digitString[loop] - '0')) {
+      if ((((int)(pattern / powersOfTen[loop])%10)) == (digitString[loop]-'0')) {
          numCorrect++;
       }
    }
 
+#if 1
    Serial.print(F("Num digits correct "));
    Serial.println(numCorrect);
+#endif
    
    /* Map the number of correct digits to the stage 3 score */
    stageScore = goodDigitPoints[numCorrect];
-}
-
-
-void Stage3::report(void) 
-{
-   int score = 0;
-   
-   Serial.print(F("------ Stage 3 report ------\n"));
-   Serial.print(F("STAGE SCORE: "));
-   Serial.println(stageScore);
-   Serial.print(F("Digits entered: "));
-   Serial.println(digitString);
-   
-   if (controller.attached()) {
-      controller.lcdp()->setCursor(0,3);
-      controller.lcdp()->print("3: ");
-      controller.lcdp()->print(String(stageScore));
-      controller.lcdp()->print(" ");
-      controller.lcdp()->print(String(digitString));
-   }
- 
-}
-
-
-int Stage3::score(void) 
-{
-  return stageScore;
-}
-
-
-void addDigit(void)
-{
-#if 0
-   Serial.print(F("prevPosition="));
-   Serial.println(prevPosition);
-#endif
-
-   if (prevPosition < 0) {
-       digits[digitCounter] = prevTurns;
-
-    } else if (enteringClockwise) {
-       digits[digitCounter] = prevTurns - prevPosition;
-    } else {
-       digits[digitCounter] = prevPosition - prevTurns;
-    }
-
-    Serial.print(F("Adding digit: ")); 
-    Serial.println(digits[digitCounter]);
-
-    lastDigitClockwise = exitingClockwise;
-    prevPosition = prevTurns;
-    digitCounter++;
-}
-
-
-boolean inCenter(long enc) 
-{
-   int relativeEncoder;
-   
-   /* Calculate the relative value +/- from center position */
-   relativeEncoder = (int) (enc % ONE_REVOLUTION);
-   if (relativeEncoder > (ONE_REVOLUTION / 2)) {
-      relativeEncoder -= ONE_REVOLUTION;
-   }
-   
-
-   /* Center is true if we are +/- a small margin of the center */
-   return abs(relativeEncoder) <= PLUS_MINUS;   
 }
 
 
@@ -336,7 +379,15 @@ long prevEncoderValue = 0;
 #define MOVEMENT_MASK_WIDTH    2
 #define MOVEMENT_HISTORY_MASK  ((1 << MOVEMENT_MASK_WIDTH) - 1)
 
-boolean movementDetected(long *encoder, int *center) 
+/*
+ * This function is called to turn the encoder value into a true/false
+ * is in center flag and to track the last 'MOVEMENT_HISTORY_SIZE' 
+ * number of motions to determine if we are moving left or right. This
+ * is needed to filter out small motions left/right causing the LEDs 
+ * in teh quadrathre to light up red/blue - this is only for visual use
+ * and nothing more.
+ */
+static boolean movementDetected(long *encoder, int *center) 
 {
    int loop; 
    int curDirection;
@@ -425,7 +476,7 @@ boolean movementDetected(long *encoder, int *center)
  *    the a timeout counter callback at a rate of 10Hz (100ms) to generate
  *    a 5Hz blink rate.
  */
-void blinkQuadratureLEDs() {
+static void blinkQuadratureLEDs() {
   static boolean onOff = HIGH;
   
   /* if blink is enabled, then toggle the enable line */
@@ -482,13 +533,13 @@ void blinkQuadratureLEDs() {
  */
 
 /* state change based on table above */
-const int stateChange[16] = 
+static const int stateChange[16] = 
 {  
    0, +1, -1, +2, -1,  0, -2, +1, 
   +1, -2,  0, -1, +2, -1, +1,  0 
 };
 
-void updateEncoder(void) 
+static void updateEncoder(void) 
 {
   /* Build up the 4bit state of current and past pin values */
   uint8_t state = oldState & 3;
