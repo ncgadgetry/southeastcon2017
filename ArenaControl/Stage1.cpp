@@ -51,11 +51,6 @@ void Stage1::start()
    relayIndex   = random(RELAY_TABLE_LENGTH);
    relayPattern = pgm_read_word_near((relayTable[relayIndex]) + 0);
    turnPattern  = pgm_read_word_near((relayTable[relayIndex]) + 1);
-   
-   // Serial.print(F("size=")); Serial.println(sizeof(relayTable));
-   // Serial.print(F("index=")); Serial.println(relayIndex);
-   // Serial.print(F("pattern=")); Serial.println(relayPattern);
-   // Serial.print(F("turns=")); Serial.println(turnPattern);
 }
 
 

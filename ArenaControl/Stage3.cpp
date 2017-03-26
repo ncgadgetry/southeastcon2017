@@ -26,8 +26,10 @@ extern Controller controller;
 #define GREEN_LED_PIN     9
 #define BLUE_LED_PIN     10
 
-#define TICKS_PER_REVOLUTION  96
-#define PLUS_MINUS             6
+#define ONE_REVOLUTION  96
+#define ONE_CLICK        4
+#define TWO_CLICKS       8
+#define PLUS_MINUS       6
 
 #define CENTER_WHITE  0x0
 #define RIGHT_RED     0x1
@@ -37,13 +39,21 @@ volatile long encoderValue = 0;
 int oldState = 0;
 int blink = 0;
 int blinkEnabled = true;
-int digits[10] = { 0 };
-int digitCounter = 0;
 
-boolean movementDetected(int *encoder);
+uint16_t turnPattern = 0;
+
+#define MAX_DIGITS_STORED 32
+uint8_t digits[MAX_DIGITS_STORED] = { 0 };
+int digitCounter = 0;
+char digitString[10] = { '\0' };
+int stageScore = 0;
+
+void addDigit(void);
+boolean inCenter(long);
+boolean movementDetected(long *encoder, int *center);
 void blinkQuadratureLEDs(void);
 void updateEncoder(void);
-
+void calculateScore(void);
 
 Stage3::Stage3() 
 {
@@ -51,7 +61,6 @@ Stage3::Stage3()
 
 void Stage3::start() 
 {
-  uint16_t turnPattern;
   
   /* Set both quadrature channels to input and turn on pullup resistors */
   pinMode(ENCODER_A_PIN, INPUT_PULLUP); 
@@ -83,30 +92,8 @@ void Stage3::start()
   digitalWrite(ENABLE_LED_PIN, HIGH);
 
   turnPattern = stage1.turnPattern;
-  Serial.print("pattern=");
+  Serial.print(F("pattern="));
   Serial.println(turnPattern);
-
-#if 0  
-  int loop;
-  int wrongGoals[5];
-  int correctGoals[5];
-  
-  int plusOrMinus = +1;
-  int previousGoal = 8;
-  for (loop=0; loop < 5; loop++) {
-     wrongGoals[4-loop] = previousGoal - 12;
-     previousGoal = correctGoals[4-loop] = ((turnPattern % 10) * 96 - 8) * plusOrMinus;
-     turnPattern /= 10;
-     plusOrMinus *= -1;
-  }
-  
-  for (loop=0; loop < 5; loop++) {
-     Serial.print(wrongGoals[loop]);
-     Serial.print(" ... ");
-     Serial.println(correctGoals[loop]);
-  }
-  Serial.println("");
-#endif  
 }
 
 
@@ -122,42 +109,174 @@ void Stage3::stop(uint32_t timestamp)
   digitalWrite(GREEN_LED_PIN,  HIGH);
   digitalWrite(BLUE_LED_PIN,   HIGH);
   digitalWrite(ENABLE_LED_PIN, LOW);
+  
+  calculateScore();
 }
 
+int prevCenter = 1;
+int prevTurns = 0;
+int prevPosition = -1;
+boolean enteringClockwise = 1;
+boolean exitingClockwise = 0;
+boolean lastDigitClockwise = true;
 
 void Stage3::step(uint32_t timestamp) 
 {
-   int encoder;
+   long encoder;
+   int center;
+   int turns;
 
    /* Check if motion was detected, and control the quadrature red/white/blue
     *    LEDs. and to return the current encoder value.  We can't use a 'live'
     *    encoder value below as we could have a race condition if the encoder
     *    changed while in the code below
     */
-   if (!movementDetected(&encoder)) {
+   if (!movementDetected(&encoder, &center)) {
       return;
    }
 
+#if 0
    if (!blinkEnabled) {
       Serial.print(F("encoder="));
       Serial.println(encoder);
    }
+#endif
+
+   /* Are we currently in a center region? */
+   if (center) {
+      
+      /* did we just transition into center on this step? */
+      if (!prevCenter) {
+         turns = (encoder + (ONE_REVOLUTION/2)) / ONE_REVOLUTION;
+         enteringClockwise = (encoder < (turns*ONE_REVOLUTION));
+         Serial.print(F("Entering center @ "));
+         Serial.print(encoder);
+         Serial.print(F(", turns="));
+         Serial.print(turns);
+         Serial.print(F(", enteringClockwise="));
+         Serial.println(enteringClockwise);
+         prevTurns = turns;
+      }
+
+   /* we are not in the center */
+   } else {
+
+      /* did we just transition out of the center on this step? */
+      if (prevCenter) {
+
+         exitingClockwise = (encoder > (prevTurns*ONE_REVOLUTION));
+         Serial.print(F("Exiting center @ "));
+         Serial.print(encoder);
+         Serial.print(F(", exitingClockwise="));
+         Serial.println(exitingClockwise);
+
+         /* If we entered, then exited the center in opposite directions
+          * then we have just dialed a digit
+          */
+         if (enteringClockwise != exitingClockwise) {
+
+#if 0
+            Serial.print(F("lastDigitClockwise "));
+            Serial.println(lastDigitClockwise);
+            Serial.print(F("prevturns "));
+            Serial.println(prevTurns);
+#endif
+
+            /* However, we only count digits entered in alternating
+             * clockwise and counterclockwise directions
+             */
+            if (lastDigitClockwise != exitingClockwise) {
+               addDigit();
+            }
+         }
+      }
+   }  
+ 
+   prevCenter = center;
+}
+
+
+/* Process the digits array to convert it to a printable string and 
+ * calculate the stage score 
+ */
+void calculateScore(void) {
+
+   int loop;
+   int numDigits;
+   int numCorrect = 0;
+   uint16_t pattern;
+   int goodDigitPoints[] = { 0, 45, 95, 155, 230, 325 };
+   int powersOfTen[] = { 10000, 1000, 100, 10, 1 };
+
+   /* If we are in the center and moved (no longer blinking), then
+    * don't forget to add in the last digit before calculating the score
+    */
+   if (!blinkEnabled && inCenter(encoderValue)) {
+      Serial.println(F("Adding last digit"));
+      addDigit();
+   }
+   
+   /* Handle the trivial case of no digits entered */   
+   if (digitCounter < 0) {
+      strcpy(digitString, "N/A");
+      stageScore = 0;
+      return;
+   }
+
+   /* Else loop through all digits in the wrap-around buffer, 
+    * converting to printable digits
+    */
+   numDigits = (digitCounter > 5) ? 5 : digitCounter;
+   for (loop=numDigits-1; loop >= 0; loop--) {
+      digitCounter--;
+      if (digitCounter < 0) {
+         digitCounter += MAX_DIGITS_STORED;
+      }
+      
+      if ((digits[digitCounter] >= 0) && (digits[digitCounter] <= 9)) {
+         digitString[loop] = digits[digitCounter] + '0';
+      } else {
+         digitString[loop] = '?';
+      }
+   }
+   
+#if 1
+   Serial.print(F("pattern="));
+   Serial.println(turnPattern);
+#endif
+
+   /* Now loop through the digits and count how many are correct */
+   pattern = turnPattern;
+   for (loop=0; loop < numDigits; loop++) {
+      if (((pattern / powersOfTen[loop]) % 10) == (digitString[loop] - '0')) {
+         numCorrect++;
+      }
+   }
+
+   Serial.print(F("Num digits correct "));
+   Serial.println(numCorrect);
+   
+   /* Map the number of correct digits to the stage 3 score */
+   stageScore = goodDigitPoints[numCorrect];
 }
 
 
 void Stage3::report(void) 
 {
-  Serial.print(F("------ Stage 3 report ------\n"));
-  Serial.print(F("STAGE SCORE: "));
-  Serial.print(score());
-  Serial.print(F("\n\n"));   
- 
+   int score = 0;
+   
+   Serial.print(F("------ Stage 3 report ------\n"));
+   Serial.print(F("STAGE SCORE: "));
+   Serial.println(stageScore);
+   Serial.print(F("Digits entered: "));
+   Serial.println(digitString);
+   
    if (controller.attached()) {
       controller.lcdp()->setCursor(0,3);
       controller.lcdp()->print("3: ");
-      controller.lcdp()->print(String(score()));
+      controller.lcdp()->print(String(stageScore));
       controller.lcdp()->print(" ");
-      controller.lcdp()->print(String("32154"));
+      controller.lcdp()->print(String(digitString));
    }
  
 }
@@ -165,8 +284,50 @@ void Stage3::report(void)
 
 int Stage3::score(void) 
 {
-  return 0;
+  return stageScore;
 }
+
+
+void addDigit(void)
+{
+#if 0
+   Serial.print(F("prevPosition="));
+   Serial.println(prevPosition);
+#endif
+
+   if (prevPosition < 0) {
+       digits[digitCounter] = prevTurns;
+
+    } else if (enteringClockwise) {
+       digits[digitCounter] = prevTurns - prevPosition;
+    } else {
+       digits[digitCounter] = prevPosition - prevTurns;
+    }
+
+    Serial.print(F("Adding digit: ")); 
+    Serial.println(digits[digitCounter]);
+
+    lastDigitClockwise = exitingClockwise;
+    prevPosition = prevTurns;
+    digitCounter++;
+}
+
+
+boolean inCenter(long enc) 
+{
+   int relativeEncoder;
+   
+   /* Calculate the relative value +/- from center position */
+   relativeEncoder = (int) (enc % ONE_REVOLUTION);
+   if (relativeEncoder > (ONE_REVOLUTION / 2)) {
+      relativeEncoder -= ONE_REVOLUTION;
+   }
+   
+
+   /* Center is true if we are +/- a small margin of the center */
+   return abs(relativeEncoder) <= PLUS_MINUS;   
+}
+
 
 uint32_t movementHistory = 0;
 long prevEncoderValue = 0;
@@ -175,9 +336,8 @@ long prevEncoderValue = 0;
 #define MOVEMENT_MASK_WIDTH    2
 #define MOVEMENT_HISTORY_MASK  ((1 << MOVEMENT_MASK_WIDTH) - 1)
 
-boolean movementDetected(int *encoder) 
+boolean movementDetected(long *encoder, int *center) 
 {
-   int curMovement;
    int loop; 
    int curDirection;
    int rightMotion  = 0;
@@ -188,13 +348,14 @@ boolean movementDetected(int *encoder)
    if (prevEncoderValue == *encoder) {
        return false;
     }
-
-   /* if we are within the plus/minus of center, set the quadrature LEDs to
-      white and wipe out all past history. This is needed as if we are moving
-      right to white, then reverse to left, we have more right motion than
-      left and can temporarily light the LEDs the wrong color
-   */
-   if (abs(curMovement - *encoder) <= PLUS_MINUS) {
+   
+   /* if we are center, then set the quadrature LEDs to white and wipe
+    * out all past history. This is needed as if we are moving right to 
+    * white, then reverse to left, we have more right motion than left 
+    * and can temporarily light the LEDs the wrong color
+    */
+   *center = inCenter(*encoder);   
+   if (*center) {
       curDirection = CENTER_WHITE;
       movementHistory = 0;
    
@@ -236,11 +397,6 @@ boolean movementDetected(int *encoder)
       } else {
          curDirection = RIGHT_RED;
       }
-
-Serial.print("history=");
-Serial.print(movementHistory);
-Serial.print(", dir=");
-Serial.println(curDirection);
    }
    
    /* Tricky code to handle the 3x conditions of red, white and blue for
