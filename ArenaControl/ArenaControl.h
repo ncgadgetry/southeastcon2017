@@ -17,9 +17,6 @@
  *   GND: neopixel, vibration, quadrature common
  *   5v:  neopixel, LED common (anode)
  *
- * KNOWN ISSUES:
- *   + stage 3 software not yet completed
- *
  * I encourage everyone to read through the code and help me identify any
  *    issues. This will make the arena electronics better for both me,
  *    your team, and all the other teams.
@@ -40,6 +37,7 @@
  * Pete Soper - SDevCS, LLC
  * Koty Turner - University of Alabama robotics team
  * Fiona Popp - University of NC Asheville robotics team
+ * Brandon Simon - Virginia COmmonwealth University
  */
 
 /* Number of milliseconds in a second */

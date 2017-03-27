@@ -40,9 +40,10 @@ static int oldState = 0;                        // previous quadrature interrupt
 static int blink = 0;                           // on/off value of blink led - updated by MsTimer2 irq
 static int blinkEnabled = true;                 // true if blink enabled (off after motion)
 
+#define NOT_MOVED (4269)                        // 6*9 = 42, in base 13, Hitchiker's Guide to the Galaxy
 static int prevCenter = 1;                      // were we in the center on the last time we checked?
 static int prevTurns = 0;                       // previous number of turns (at last digit entered)
-static int prevPosition = -1;                   // previous position (last time digit entered)
+static int prevPosition = NOT_MOVED;            // previous position (last time digit entered)
 static boolean enteringClockwise = 1;           // did we enter center in a clockwise direction?
 static boolean exitingClockwise = 0;            // did we exit center in a clockwise direction?
 static boolean lastDigitClockwise = true;       // was last digit entered in clockwise direction?
@@ -101,6 +102,7 @@ void Stage3::start()
   digitalWrite(ENABLE_LED_PIN, HIGH);
 
   turnPattern = stage1.turnPattern;
+  
   Serial.print(F("pattern="));
   Serial.println(turnPattern);
 }
@@ -170,7 +172,8 @@ void Stage3::step(uint32_t timestamp)
       
       /* did we just transition into center on this step? */
       if (!prevCenter) {
-         turns = (encoder + (ONE_REVOLUTION/2)) / ONE_REVOLUTION;
+         turns = ((encoder > 0) ? (encoder + (ONE_REVOLUTION/2))
+                                : (encoder - (ONE_REVOLUTION/2))) / ONE_REVOLUTION;
          enteringClockwise = (encoder < (turns*ONE_REVOLUTION));
 #if 1 
          Serial.print(F("Entering center @ "));
@@ -203,7 +206,7 @@ void Stage3::step(uint32_t timestamp)
           */
          if (enteringClockwise != exitingClockwise) {
 
-#if 0
+#if 1
             Serial.print(F("lastDigitClockwise "));
             Serial.println(lastDigitClockwise);
             Serial.print(F("prevturns "));
@@ -258,13 +261,13 @@ int Stage3::score(void)
  */
 static void addDigit(void)
 {
-#if 0
+#if 1
    Serial.print(F("prevPosition="));
    Serial.println(prevPosition);
 #endif
 
    /* If this is the first digit, the digit is just the number of turns */
-   if (prevPosition < 0) {
+   if (prevPosition == NOT_MOVED) {
        digits[digitCounter] = prevTurns;
 
     /* Else we need to subtract the last position to get the delta number of
@@ -293,7 +296,7 @@ static boolean inCenter(long enc)
    int relativeEncoder;
    
    /* Calculate the relative value +/- from center position */
-   relativeEncoder = (int) (enc % ONE_REVOLUTION);
+   relativeEncoder = (int) (abs(enc) % ONE_REVOLUTION);
    if (relativeEncoder > (ONE_REVOLUTION / 2)) {
       relativeEncoder -= ONE_REVOLUTION;
    }
