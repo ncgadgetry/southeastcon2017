@@ -42,7 +42,7 @@ static int blinkEnabled = true;                 // true if blink enabled (off af
 
 static int prevCenter = 1;                      // were we in the center on the last time we checked?
 static int prevTurns = 0;                       // previous number of turns (at last digit entered)
-static int prevPosition = -1;                   // previous position (last time digit entered)
+static int prevPosition = -100;                   // previous position (last time digit entered)
 static boolean enteringClockwise = 1;           // did we enter center in a clockwise direction?
 static boolean exitingClockwise = 0;            // did we exit center in a clockwise direction?
 static boolean lastDigitClockwise = true;       // was last digit entered in clockwise direction?
@@ -170,7 +170,10 @@ void Stage3::step(uint32_t timestamp)
       
       /* did we just transition into center on this step? */
       if (!prevCenter) {
-         turns = (encoder + (ONE_REVOLUTION/2)) / ONE_REVOLUTION;
+         if(encoder > 0)
+           turns = (encoder + (ONE_REVOLUTION / 2)) / ONE_REVOLUTION;
+         else
+           turns = (encoder - (ONE_REVOLUTION / 2)) / ONE_REVOLUTION;
          enteringClockwise = (encoder < (turns*ONE_REVOLUTION));
 #if 1 
          Serial.print(F("Entering center @ "));
@@ -264,7 +267,7 @@ static void addDigit(void)
 #endif
 
    /* If this is the first digit, the digit is just the number of turns */
-   if (prevPosition < 0) {
+   if (prevPosition == -100) {
        digits[digitCounter] = prevTurns;
 
     /* Else we need to subtract the last position to get the delta number of
@@ -293,7 +296,7 @@ static boolean inCenter(long enc)
    int relativeEncoder;
    
    /* Calculate the relative value +/- from center position */
-   relativeEncoder = (int) (enc % ONE_REVOLUTION);
+   relativeEncoder = (int) (abs(enc) % ONE_REVOLUTION);
    if (relativeEncoder > (ONE_REVOLUTION / 2)) {
       relativeEncoder -= ONE_REVOLUTION;
    }
