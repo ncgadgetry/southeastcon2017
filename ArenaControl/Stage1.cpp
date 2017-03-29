@@ -80,6 +80,10 @@ void Stage1::step(uint32_t timestamp)
  */
 void Stage1::report(void) 
 {
+   uint16_t tempPattern;
+   char     letterPattern[10];
+   int      loop;
+      
    Serial.print(F("------ Stage 1 report ------\n"));
    Serial.print(F("RELAY INDEX: "));
    Serial.print(relayIndex);
@@ -87,13 +91,23 @@ void Stage1::report(void)
    Serial.print(String(relayTable[relayIndex][0], 16));
    Serial.print(F("\nSTAGE SCORE: N/A"));
    Serial.print(F("\n\n")); 
+
+   /* Convert numerical turn pattern into WRCID code pattern */
+   tempPattern = turnPattern;
+   for (loop=0; loop < 5; loop++) {
+       letterPattern[5-loop] = "WRCID"[(tempPattern % 10) - 1];
+       tempPattern /= 10;
+   }
+   letterPattern[0] = '/';
+   letterPattern[6] = '\0';
    
    if (controller.attached()) {
       controller.lcdp()->setCursor(0,1);
       controller.lcdp()->print("1: #");
       controller.lcdp()->print(relayIndex);
       controller.lcdp()->print(" ");
-      controller.lcdp()->print(String(relayPattern, 16));
+      controller.lcdp()->print(turnPattern);
+      controller.lcdp()->print(letterPattern);
    }
 }
 

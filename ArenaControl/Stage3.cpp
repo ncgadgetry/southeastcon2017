@@ -328,8 +328,8 @@ static void calculateScore(void) {
    }
    
    /* Handle the trivial case of no digits entered */   
-   if (digitCounter < 0) {
-      strcpy(digitString, "N/A");
+   if (digitCounter <= 0) {
+      strcpy(digitString, "--none--");
       stageScore = 0;
       return;
    }
