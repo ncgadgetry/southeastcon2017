@@ -360,7 +360,9 @@ static void calculateScore(void) {
    /* Now loop through the digits and count how many are correct */
    pattern = turnPattern;
    for (loop=0; loop < numDigits; loop++) {
-      if ((((int)(pattern / powersOfTen[loop])%10)) == (digitString[loop]-'0')) {
+      int expected = (pattern / powersOfTen[loop]) % 10;
+      int found    = digitString[loop] - '0';
+      if (expected == found) {
          numCorrect++;
       }
    }

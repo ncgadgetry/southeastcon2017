@@ -71,6 +71,11 @@ void Stage1::step(uint32_t timestamp)
    if (firstTime) {
        setRelays(relayPattern);
        firstTime = false;
+
+#if 1       
+       controller.lcdp()->setCursor(0,1);
+       controller.lcdp()->print(turnPattern);
+#endif
    }
 }
 
