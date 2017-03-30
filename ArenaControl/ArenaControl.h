@@ -37,7 +37,8 @@
  * Pete Soper - SDevCS, LLC
  * Koty Turner - University of Alabama robotics team
  * Fiona Popp - University of NC Asheville robotics team
- * Brandon Simon - Virginia COmmonwealth University
+ * Brandon Simon - Virginia Commonwealth University
+ * Nathan Kabat - University of Evansville
  */
 
 /* Number of milliseconds in a second */
