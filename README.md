@@ -20,7 +20,7 @@ This github contains the arena control software for the IEEE Southeastcon 2017 h
 
 # References
 
-* [Schematics and PCB files](https://github.com/petesoper/arena-pcbs)
+* [Schematics and PCB files](https://bitbucket.org/petesoper/arena-pcbs)
 
    A big thank you and appreciation to Pete Soper for his work on the five arena schematic and PCB boards:
 
@@ -52,4 +52,5 @@ This github contains the arena control software for the IEEE Southeastcon 2017 h
    *   D13: (O) magnetic coil (and UNO on-board LED)
    *   GND: neopixel, vibration, quadrature common
    *   5v:  neopixel, LED common (anode)
+
 
